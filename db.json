@@ -1,0 +1,48 @@
+{
+  "projects": [
+    {
+      "id": "956d",
+      "name": "test project ",
+      "mern": {
+        "taskSheet": "",
+        "mom": "",
+        "notes": ""
+      },
+      "dotnet": {
+        "taskSheet": "",
+        "mom": "",
+        "notes": ""
+      },
+      "website": {
+        "taskSheet": "",
+        "mom": "",
+        "notes": ""
+      }
+    },
+    {
+      "id": "884c",
+      "name": "test ",
+      "type": "website",
+      "taskSheet": "https://www.google.com/search?gs_ssp=eJzj4tTP1TcwMU02T1JgNGB0YPBiS8_PT89JBQBASQXT&q=google&oq=goo&gs_lcrp=EgZjaHJvbWUqEggBEC4YJxjHARjRAxiABBiKBTIGCAAQRRg5MhIIARAuGCcYxwEY0QMYgAQYigUyDwgCEAAYFBiHAhixAxiABDINCAMQABiDARixAxiABDINCAQQABiDARixAxiABDIKCAUQABixAxiABDIKCAYQABixAxiABDIKCAcQABixAxiABDIHCAgQABiPAjIHCAkQABiPAtIBCTMyNDBqMGoxNagCCLACAfEFvIHYiZU5vKLxBbyB2ImVObyi&sourceid=chrome&ie=UTF-8#sv=CBASgRUK2RQKBtrZ29IPABLOFArICArFCLrZ29IPvggKF2h0dHBzOi8vd3d3Lmdvb2dsZS5jb20vEgZHb29nbGUalghkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUNBQUFBQWdDQU1BQUFCRXBJckdBQUFBN1ZCTVZFVkhjRXovUmtML1IwRCtTRXIvUlVEL1JrT3dqbGIvU0Q3L1NFMy9TVWovVnpiL1ZEZjlURmI4VFZlSG9GYi9ZVEQvYnluOFRWbi9qUnIvZlNML214TC9TRWoreVFuL29oSC90UXYrVlViL3ZRbi93d24remdqOXdRbTN4UTM5emdUNnpRWXdodi83emdvd2h2OHVodjBlaytBdmh2N3l6QVBqeXdJdmh2MHdodjdQeVFIVXlnSXRoL3kzeUFFbml2U2x4d0dTeGdVYWs5NGZqK2g1eEFsZ3d4TUxxcDhObnNRVmx0ZTZ4d0JOd2g0NXdDMHh3RE1MdDI4SXJKZ0pwYTBralBDYXhRRXB2enNldmtrV3ZWQU51bVFRdTE4SnRYa0lzSWdUdlZZT3ZHQUx1V3RKd2g0T3ZGOE92RjljY2Z4Q0FBQUFUM1JTVGxNQVVadlQ3UDhULy8rd2l2Ly9rQXY2L21ELy8rVjJqdi8vSktmLy8wRW14T3IvclA3K01FWC8veDEwLzZldS8vMysvOXYvLy83SS8vK0svLytLUy8zL1llWC8vN2RzbnY3Ly8vLy81czN0TUFxQk1BQUFBWEZKUkVGVWVBRjBqVVVDd0NBTXdEcDNkL2Y5LzRrcm5WdDZnb1FDRnpoZUVDVkpGSGdPUHBCNVJaSFlJS3FxeVUrdkd3cENYa1ZNMDdwcDJ6RVE4aFNZaUNCZjFyc3VGclFDdmFTYWhIZSs5d01xV0hKdU9EMkUvbFlvV3NSeGtVYkJ4Y2RKc2hZNmJFUTNMNmZwV21UblhYYnhrQmNwSlRiOFVCWkZnVVgxNTZ1eUxMSEk0WStZZ3FMK0RacVMwUjduN280TkxRWDlHUXdiSTV0dWdwS0k3d0Y1UmpkL0JpTkNDUVpmWDVCZkN3eVdyc25hZ0dFWWlLS3BNa0xxZ0ptWm1Ybi9jYUtUekdvTTcrdjRJRWlXUFFkSjRmTWhGdWpIQ3pqSDdXbnk2eEZ3TUI5VUtCYTRLTjNUbDRraDlBWllWSlJicFhoVlZSR1gwYXNFWE5QMWE3TU0wd1FKQSswV0ZjUXR5ejdiY0Z6UEF3bis4QWtQd21qRGNaSzZXSkdSNzV6d3NDaXJPbzdycHUwU29qQzJvUVVlSUY3Mi9UQ01ZNHNVS1NqMndYOWlYZ0FId1lnRW9LQlBpek9CZ3g0RWh3bkN0eE90RG5ZVHpuMUdudzN3ellRVDN6REpycG1YWVZqbXBqN2QvZ1BrbmxKRTZlWlNld0FBQUFCSlJVNUVya0pnZ2c9PSABOAEKzAEKyQHS2dvSD8IBCgZHb29nbGUSF2h0dHBzOi8vd3d3Lmdvb2dsZS5jb20vGp4BU2VhcmNoIHRoZSB3b3JsZCdzIGluZm9ybWF0aW9uLCBpbmNsdWRpbmcgd2VicGFnZXMsIGltYWdlcywgdmlkZW9zIGFuZCBtb3JlLiBHb29nbGUgaGFzIG1hbnkgc3BlY2lhbCBmZWF0dXJlcyB0byBoZWxwIHlvdSBmaW5kIGV4YWN0bHkgd2hhdCB5b3UncmUgbG9va2luZyAuLi4K_AUK-QXC2dvSD_IFEgZHb29nbGUawwIKF2h0dHBzOi8vd3d3Lmdvb2dsZS5jb20vEgZHb29nbGUangFTZWFyY2ggdGhlIHdvcmxkJ3MgaW5mb3JtYXRpb24sIGluY2x1ZGluZyB3ZWJwYWdlcywgaW1hZ2VzLCB2aWRlb3MgYW5kIG1vcmUuIEdvb2dsZSBoYXMgbWFueSBzcGVjaWFsIGZlYXR1cmVzIHRvIGhlbHAgeW91IGZpbmQgZXhhY3RseSB3aGF0IHlvdSdyZSBsb29raW5nIC4uLiABKgJlbjICSU46GioYeWFzaHZhaWR5YTk2MjNAZ21haWwuY29tQh8vcz90Ym09bWFwJmdzX3JpPW1hcHMmc3VnZ2VzdD1wSjBBS1BPcjFRcWN0U3B2TjI3a1ByYnVaZDRTbG9zR21PNmdnOjE3NzM4MzE1OTIwNTZSBkdvb2dsZVIjGAUqBkdvb2dsZToXaHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS9yKwoXaHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8oIzIOU291cmNlOiBHb29nbGV6zwIaBkdvb2dsZSIWd2VicmVzdWx0X3kxNEZjVVFPR2w0SjABYO6PBmoKTVNBRiAtIFNSUHKOAqoBGU5BVklHQVRJT05BTF9SRVNVTFRfSU5ORVKyASMKF2h0dHBzOi8vd3d3Lmdvb2dsZS5jb20vEgRCTFVSGAAgAeIByAEKsgFTZWFyY2ggdGhlIHdvcmxkJiMzOTtzIGluZm9ybWF0aW9uLCBpbmNsdWRpbmcgd2VicGFnZXMsIGltYWdlcywgdmlkZW9zIGFuZCBtb3JlLiA8Yj5Hb29nbGU8L2I-IGhhcyBtYW55IHNwZWNpYWwgZmVhdHVyZXMgdG8gaGVscCB5b3UgZmluZCBleGFjdGx5IHdoYXQgeW91JiMzOTtyZSBsb29raW5nJm5ic3A7Li4uEg08Yj5Hb29nbGU8L2I-GAAgD6ABYsABAeABAegBAQqyBAqvBMrZ29IPqAQSgwQigAQvc2VhcmNoL2Fib3V0LXRoaXMtcmVzdWx0P29yaWdpbj13d3cuZ29vZ2xlLmNvbSZjcz0xJnJlcT1DaGRvZEhSd2N6b3ZMM2QzZHk1bmIyOW5iR1V1WTI5dEx4SUlDZ0FTQUJvQ0NBQWFtZ0lTQWdnQkdnQWlBQ29BTWdZSUF4SUNhVzQ2QUVJRUNBRVFBRW9BV2dCeUFIb0Fna0QwQVFnQUVBQVlBQ0FBS2cwS0JtZHZiMmRzWlJVWGhJaEFNaGRvZEhSd2N6b3ZMM2QzZHk1bmIyOW5iR1V1WTI5dEx6b05QR0ktUjI5dloyeGxQQzlpUGtLeUFWTmxZWEpqYUNCMGFHVWdkMjl5YkdRbUl6TTVPM01nYVc1bWIzSnRZWFJwYjI0c0lHbHVZMngxWkdsdVp5QjNaV0p3WVdkbGN5d2dhVzFoWjJWekxDQjJhV1JsYjNNZ1lXNWtJRzF2Y21VdUlEeGlQa2R2YjJkc1pUd3ZZajRnYUdGeklHMWhibmtnYzNCbFkybGhiQ0JtWldGMGRYSmxjeUIwYnlCb1pXeHdJSGx2ZFNCbWFXNWtJR1Y0WVdOMGJIa2dkMmhoZENCNWIzVW1Jek01TzNKbElHeHZiMnRwYm1jbWJtSnpjRHN1TGk0aUFoQUJTQUZZQUdnQSZobD1lbi1JTiZnbD1JThoWaHR0cHM6Ly93d3cuZ29vZ2xlLmNvbVoAYAFoAXAAeAASI2F0cml0ZW0tX3A0VzZhZExQTThpOXZyMFBwcmpUOEFJXzM4GC8g7qys-wowAg",
+      "mom": "https://tailwindcss.com/docs/installation/using-postcss",
+      "notes": "test nots "
+    },
+    {
+      "id": "42cf",
+      "name": "test mern",
+      "type": "mern",
+      "taskSheet": "test for mern",
+      "mom": "test for mern",
+      "notes": "test firnfodv sdrgvsdbxf"
+    },
+    {
+      "id": "f003",
+      "name": "test project ",
+      "type": "mern",
+      "taskSheet": "test task ",
+      "mom": "test mom",
+      "notes": "test note"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
