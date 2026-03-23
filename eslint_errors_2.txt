@@ -1,0 +1,53 @@
+﻿
+D:\MY PROJECTS\Project-Management-System\src\components\BookLayout.jsx
+  64:14  error  'err' is defined but never used  no-unused-vars
+
+D:\MY PROJECTS\Project-Management-System\src\components\ProjectDashboard.jsx
+  35:14  error  'err' is defined but never used  no-unused-vars
+
+D:\MY PROJECTS\Project-Management-System\src\components\TaskSheetViewer.jsx
+  22:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  20 |   useEffect(() => {
+  21 |     if (!taskSheet) {
+> 22 |       setData([]);
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  23 |       return;
+  24 |     }
+  25 |     try {  react-hooks/set-state-in-effect
+  34:14  error  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+
+D:\MY PROJECTS\Project-Management-System\src\pages\AddProject.jsx
+   11:10  error  'isLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+   11:21  error  'setIsLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  221:12  error  'isLoadingSheet' is not defined                                                               no-undef
+
+D:\MY PROJECTS\Project-Management-System\src\pages\Home.jsx
+  63:17  error  'e' is defined but never used  no-unused-vars
+  63:20  error  Empty block statement          no-empty
+
+D:\MY PROJECTS\Project-Management-System\src\pages\ProjectDetails.jsx
+  10:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   8 |   useEffect(() => {
+   9 |     if (project && project.notes !== notes) {
+> 10 |       setNotes(project.notes || "");
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  11 |     }
+  12 |   }, [project, notes]);
+  13 |  react-hooks/set-state-in-effect
+
+Γ£û 10 problems (10 errors, 0 warnings)
+

@@ -1,0 +1,15 @@
+﻿
+D:\MY PROJECTS\Project-Management-System\src\components\BookLayout.jsx
+  64:14  error  '_err' is defined but never used  no-unused-vars
+
+D:\MY PROJECTS\Project-Management-System\src\components\ProjectDashboard.jsx
+  35:14  error  '_err' is defined but never used  no-unused-vars
+
+D:\MY PROJECTS\Project-Management-System\src\components\TaskSheetViewer.jsx
+  35:14  error  'e' is defined but never used  no-unused-vars
+
+D:\MY PROJECTS\Project-Management-System\src\pages\AddProject.jsx
+  11:26  error  'setIsLoadingSheet' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+Γ£û 4 problems (4 errors, 0 warnings)
+
