@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
+import { excelToJson } from "../utils/excelToJson";
+import { useToast } from "../utils/ToastContext";
 
 function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSidebar, isSidebarCollapsed }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importType, setImportType] = useState("excel");
+  const [importText, setImportText] = useState("");
+  const { addToast } = useToast();
 
   const updateData = (newData) => {
     setHistory(prev => [...prev, data]);
@@ -15,6 +21,90 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
     const prev = history[history.length - 1];
     setHistory(history.slice(0, -1));
     setData(prev);
+  };
+
+  const renameHeader = (oldKey, newKey) => {
+    if (!newKey || oldKey === newKey) return;
+    const newData = data.map(row => {
+      const newRow = {};
+      Object.keys(row).forEach(key => {
+        if (key === oldKey) {
+          newRow[newKey] = row[oldKey];
+        } else {
+          newRow[key] = row[key];
+        }
+      });
+      return newRow;
+    });
+    updateData(newData);
+  };
+
+  const addColumn = () => {
+    const colName = prompt("Enter new column name:");
+    if (!colName) return;
+    const newData = data.map(row => ({ ...row, [colName]: "" }));
+    updateData(newData);
+  };
+
+  const deleteColumn = (colKey) => {
+    const newData = data.map(row => {
+      const { [colKey]: removed, ...rest } = row;
+      return rest;
+    });
+    updateData(newData);
+    addToast(`Column "${colKey}" deleted. Use Revert to undo.`, "info");
+  };
+
+  const mergeWithNext = (colKey) => {
+    const keys = Object.keys(data[0]);
+    const currentIndex = keys.indexOf(colKey);
+    if (currentIndex === -1 || currentIndex === keys.length - 1) {
+      addToast("No next column to merge with.", "warning");
+      return;
+    }
+    const nextKey = keys[currentIndex + 1];
+    const newData = data.map(row => {
+      const newRow = { ...row };
+      newRow[colKey] = `${row[colKey] || ""} ${row[nextKey] || ""}`.trim();
+      delete newRow[nextKey];
+      return newRow;
+    });
+    updateData(newData);
+    addToast(`Merged "${nextKey}" into "${colKey}". Use Revert to undo.`, "info");
+  };
+
+  const handleImport = () => {
+    if (importType === "excel") {
+      try {
+        const parsed = excelToJson(importText);
+        if (parsed.length) {
+          updateData(parsed);
+          setIsImporting(false);
+          setImportText("");
+          setError("");
+          addToast("Data imported successfully", "success");
+        } else {
+          addToast("Invalid Excel data detected.", "error");
+        }
+      } catch {
+        addToast("Failed to parse Excel data.", "error");
+      }
+    } else {
+      if (importText.includes("docs.google.com/spreadsheets")) {
+        if (onSave) onSave(importText);
+        setIsImporting(false);
+        addToast("Google Sheet linked successfully", "success");
+      } else {
+        addToast("Invalid Google Sheets link.", "error");
+      }
+    }
+  };
+
+  const initializeTable = () => {
+    const initialData = [
+      { "Sr No": "1", "Module": "", "Task": "", "Status": "Pending", "Comment": "" }
+    ];
+    updateData(initialData);
   };
 
   useEffect(() => {
@@ -73,7 +163,17 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
   }
 
   if (!data || data.length === 0) {
-    return <p className="dark:text-indigo-200 text-[var(--text-color)]/60 mt-4 font-bold">No {title.toLowerCase()} data available.</p>;
+    return (
+      <div className="border dark:border-white/20 border-black/10 rounded-3xl p-10 mt-4 flex flex-col items-center justify-center bg-black/5 dark:bg-white/5 border-dashed">
+        <p className="dark:text-indigo-200 text-[var(--text-color)]/60 mb-6 font-bold text-center italic">No {title} structure detected in current sector.</p>
+        <button 
+          onClick={initializeTable}
+          className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-10 py-5 rounded-[30px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-4"
+        >
+          <span className="text-2xl">⚡</span> Initialize {title} Module
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -89,8 +189,65 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
           </button>
           <h3 className="font-black dark:text-white text-[var(--text-color)] uppercase tracking-tighter">{title} <span className="text-[var(--accent-color)] opacity-50 text-[10px]">Data Grid</span></h3>
         </div>
-        <span className="text-[10px] bg-[var(--accent-color)] px-4 py-1 rounded-full text-white shadow-lg font-black uppercase tracking-[0.2em]">{data.length} Nodes</span>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsImporting(!isImporting)}
+            className="text-[10px] bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest transition-all border border-indigo-500/20"
+          >
+             📥 Import
+          </button>
+          <button 
+            onClick={addColumn}
+            className="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest transition-all border border-emerald-500/20"
+          >
+            ➕ Col
+          </button>
+          <span className="text-[10px] bg-[var(--accent-color)] px-4 py-1.5 rounded-full text-white shadow-lg font-black uppercase tracking-[0.2em]">{data.length} Nodes</span>
+        </div>
       </div>
+
+      {isImporting && (
+        <div className="p-6 bg-indigo-950/30 border-b border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex gap-4 mb-4">
+            <button 
+              onClick={() => setImportType("excel")}
+              className={`px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${importType === "excel" ? "bg-indigo-500 text-white shadow-lg" : "bg-white/5 text-indigo-200"}`}
+            >
+              Excel Matrix
+            </button>
+            <button 
+              onClick={() => setImportType("google")}
+              className={`px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${importType === "google" ? "bg-indigo-500 text-white shadow-lg" : "bg-white/5 text-indigo-200"}`}
+            >
+              Google Vector
+            </button>
+          </div>
+          <div className="flex gap-4">
+            {importType === "excel" ? (
+              <textarea 
+                placeholder="Paste system data matrix directly from source..."
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-4 text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-xs"
+                rows={3}
+              />
+            ) : (
+              <input 
+                placeholder="Enter secure Google Drive vector link..."
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-4 text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-xs"
+              />
+            )}
+            <button 
+              onClick={handleImport}
+              className="bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all"
+            >
+              Injection
+            </button>
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto pb-6 custom-scrollbar">
         <table className="w-full text-sm text-left dark:text-indigo-100 text-[var(--text-color)] table-auto border-collapse">
           <thead className="text-[10px] uppercase dark:bg-white/10 bg-black/20 dark:text-indigo-50 text-white font-black tracking-widest">
@@ -103,7 +260,40 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                 #
               </th>
               {Object.keys(data[0]).map((key, i) => (
-                <th key={i} className="px-6 py-4 border-r dark:border-white/10 border-black/10 min-w-[150px]">{key}</th>
+                <th key={i} className="p-0 border-r dark:border-white/10 border-black/10 group/header relative" style={{ minWidth: '150px' }}>
+                  <div className="flex flex-col h-full min-h-[80px]">
+                    <div className="flex items-center justify-between px-4 py-2 bg-black/5 dark:bg-white/5 border-b dark:border-white/10 border-black/10">
+                      <button 
+                        onClick={() => mergeWithNext(key)}
+                        className="opacity-0 group-hover/header:opacity-100 transition-opacity text-indigo-400 hover:text-indigo-300 text-[10px] p-1 rounded hover:bg-white/10"
+                        title="Merge with right"
+                      >
+                        🔗
+                      </button>
+                      <button 
+                        onClick={() => deleteColumn(key)}
+                        className="opacity-0 group-hover/header:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-1 rounded hover:bg-white/10"
+                        title="Delete Column"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div 
+                      className="px-4 py-3 h-full overflow-hidden flex-1" 
+                      style={{ resize: 'horizontal', minWidth: '100%', maxWidth: '600px' }}
+                    >
+                      <div 
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => renameHeader(key, e.target.innerText)}
+                        className="focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)] rounded px-1 transition-all bg-transparent font-black tracking-widest leading-tight w-full break-words"
+                      >
+                        {key}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--accent-color)] opacity-0 group-hover/header:opacity-30 transition-opacity"></span>
+                </th>
               ))}
               <th className="px-6 py-4 text-center min-w-[80px]">Vector</th>
             </tr>
@@ -149,7 +339,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                             if (newValue !== row[key]) {
                               const newData = [...data];
                               newData[i] = { ...newData[i], [key]: newValue };
-                              setData(newData);
+                              updateData(newData);
                             }
                           }}
                           className="w-full min-h-[1.5em] bg-transparent dark:text-white text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/20 rounded-xl px-2 transition-all break-words whitespace-pre-wrap font-medium"

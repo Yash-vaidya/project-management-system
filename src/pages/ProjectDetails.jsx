@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../utils/ToastContext";
 
 function ProjectDetail({ project }) {
   const navigate = useNavigate();
   const [notes, setNotes] = useState("");
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (project && project.notes !== notes) {
@@ -21,7 +23,7 @@ function ProjectDetail({ project }) {
       body: JSON.stringify({ notes }),
     });
 
-    alert("✅ Notes Saved");
+    addToast("Notes saved successfully", "success");
   };
 
   return (

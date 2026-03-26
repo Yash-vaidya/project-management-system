@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import ProjectBook from "../components/ProjectBook";
 import BookLayout from "../components/BookLayout";
+import { useToast } from "../utils/ToastContext";
 
 function Projects({ toggleSidebar, isSidebarCollapsed }) {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [activePage, setActivePage] = useState(null);
   const [pageMap, setPageMap] = useState({ mern: 0, dotnet: 0, website: 0 });
+  const { addToast } = useToast();
 
   const ITEMS_PER_PAGE = 6;
 
@@ -32,9 +34,10 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
         setSelectedProject(null);
         setActivePage(null);
       }
+      addToast("Project deleted", "info");
     } catch (err) {
       console.error(err);
-      alert("Failed to delete project");
+      addToast("Failed to delete project", "error");
     }
   };
 

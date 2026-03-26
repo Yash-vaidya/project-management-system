@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { excelToJson } from "../utils/excelToJson";
+import { useToast } from "../utils/ToastContext";
 
 function AddProject() {
   const [name, setName] = useState("");
   const [type, setType] = useState("mern");
+  const { addToast } = useToast();
 
   const [importType, setImportType] = useState("excel");
   const [taskSheetText, setTaskSheetText] = useState("");
@@ -31,7 +33,7 @@ function AddProject() {
       setPreviewData(parsed.length ? parsed : null);
       setSheetError("");
     } catch {
-      alert("❌ Critical Error linking Sheets System");
+      addToast("Critical Error: Could not parse Excel data", "error");
     } finally {
       // No specific action requested for finally block in instruction, keeping it empty as per snippet.
     }
@@ -71,7 +73,7 @@ function AddProject() {
       setSodPreviewData(parsed.length ? parsed : null);
       setSodError("");
     } catch {
-      alert("Failed to connect to Database Uplink");
+      setSodError("Failed to parse SOD Excel data.");
     } finally {
       // No specific action requested for finally block in instruction, keeping it empty as per snippet.
     }
@@ -98,7 +100,7 @@ function AddProject() {
     if (!name.trim()) { setFormError("Project Name is required."); return; }
     
     if (importType === "google" && !validateUrl(taskSheetText)) { setFormError("Invalid Task Sheet Google Link."); return; }
-    if (importType === "excel" && (!previewData || previewData.length === 0)) { setFormError("Please paste valid Excel data for the Task Sheet."); return; }
+    // if (importType === "excel" && (!previewData || previewData.length === 0)) { setFormError("Please paste valid Excel data for the Task Sheet."); return; }
 
     if (momText && momImportType === "google" && !validateUrl(momText)) { setFormError("Invalid MOM Google Link."); return; }
     if (sodText && sodImportType === "google" && !validateUrl(sodText)) { setFormError("Invalid SOD Google Link."); return; }
@@ -128,7 +130,7 @@ function AddProject() {
 
       if (!res.ok) throw new Error("Failed to save");
 
-      alert("✅ Project Successfully Archived");
+      addToast("Project successfully archived", "success");
 
       // Reset Form
       setName("");

@@ -6,6 +6,7 @@ import Projects from "./pages/Projects";
 import AddProject from "./pages/AddProject";
 import Navbar from "./components/Navbar";
 import ProjectDetails from "./pages/ProjectDetails";
+import { ToastProvider } from "./utils/ToastContext";
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
   const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
   return (
+    <ToastProvider>
     <div className={`min-h-screen transition-colors duration-300`} style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
       {/* Theme Toggle Removed as requested */}
 
@@ -91,6 +93,7 @@ function App() {
         </button>
       )}
     </div>
+    </ToastProvider>
   );
 }
 
