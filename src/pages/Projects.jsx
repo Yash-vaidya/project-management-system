@@ -25,6 +25,13 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
     }));
   };
 
+  const handleUpdateProject = (updatedProject) => {
+    setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+    if (selectedProject && selectedProject.id === updatedProject.id) {
+      setSelectedProject(updatedProject);
+    }
+  };
+
   const handleDeleteProject = async (id) => {
     if (!window.confirm("Are you sure you want to delete this project? Data will be lost permanently.")) return;
     try {
@@ -139,6 +146,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
             else setSelectedProject(null);
           }}
           onDelete={() => handleDeleteProject(selectedProject.id)}
+          onUpdateProject={handleUpdateProject}
           toggleSidebar={toggleSidebar}
           isSidebarCollapsed={isSidebarCollapsed}
         />

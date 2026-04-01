@@ -14,7 +14,8 @@ function NotesEditor({ value = "", onSave }) {
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="w-full h-[400px] p-6 rounded-3xl dark:bg-white/5 bg-black/5 dark:text-white text-[var(--text-color)] border dark:border-white/10 border-black/10 focus:ring-2 focus:ring-[var(--accent-color)] outline-none transition-all shadow-inner font-medium leading-relaxed custom-scrollbar"
+        onBlur={() => onSave(content)}
+        className="w-full h-[400px] p-6 rounded-3xl dark:bg-white/5 bg-black/5 dark:text-white text-slate-900 border dark:border-white/10 border-black/10 focus:ring-2 focus:ring-[var(--accent-color)] outline-none transition-all shadow-inner font-medium leading-relaxed custom-scrollbar"
         placeholder="Synchronize your thoughts here..."
       />
 

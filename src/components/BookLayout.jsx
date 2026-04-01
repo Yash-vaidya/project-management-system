@@ -5,7 +5,7 @@ import MultiTableViewer from "./MultiTableViewer";
 import ProjectDashboard from "./ProjectDashboard";
 import { useToast } from "../utils/ToastContext";
 
-function BookLayout({ project, activePage, setActivePage, goBack, onDelete, toggleSidebar, isSidebarCollapsed }) {
+function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUpdateProject, toggleSidebar, isSidebarCollapsed }) {
   const [flash, setFlash] = useState(false);
   const [isIndexCollapsed, setIsIndexCollapsed] = useState(false);
   const { addToast } = useToast();
@@ -23,6 +23,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, togg
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes: newNotes }),
     });
+    if (onUpdateProject) onUpdateProject({ ...project, notes: newNotes });
     addToast("Notes saved successfully", "success");
   };
 
@@ -34,6 +35,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, togg
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [field]: serialized }),
     });
+    if (onUpdateProject) onUpdateProject({ ...project, [field]: serialized });
     const fieldName = field === 'mom' ? 'MOM' : field === 'sod' ? 'SOD' : 'Task Sheet';
     addToast(`${fieldName} saved successfully`, "success");
   };
@@ -42,13 +44,23 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, togg
   const calculateMetrics = (dataStr) => {
     if (!dataStr || typeof dataStr !== "string") return { total: 0, completed: 0, inProgress: 0 };
     try {
-      const data = JSON.parse(dataStr);
-      if (!Array.isArray(data)) return { total: 0, completed: 0, inProgress: 0 };
+      const parsed = JSON.parse(dataStr);
+      if (!Array.isArray(parsed)) return { total: 0, completed: 0, inProgress: 0 };
       
+      let data = [];
+      if (parsed[0] && typeof parsed[0] === 'object' && !Array.isArray(parsed[0]) && 'data' in parsed[0]) {
+        parsed.forEach(table => { if (Array.isArray(table.data)) data.push(...table.data); });
+      } else if (Array.isArray(parsed[0])) {
+        parsed.forEach(table => { if (Array.isArray(table)) data.push(...table); });
+      } else {
+        data = parsed;
+      }
+
       let completed = 0;
       let inProgress = 0;
       
       data.forEach(row => {
+        if (!row || typeof row !== 'object') return;
         const statusKey = Object.keys(row).find(k => k.toLowerCase().includes("status"));
         if (statusKey && row[statusKey]) {
           const val = row[statusKey].toString().trim().toLowerCase();

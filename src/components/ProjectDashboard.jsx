@@ -5,8 +5,27 @@ function ProjectDashboard({ project }) {
   const getMetrics = (dataStr) => {
     if (!dataStr || typeof dataStr !== "string") return { percent: 0, counts: { total: 0, completed: 0, pending: 0, progress: 0, hold: 0 } };
     try {
-      const data = JSON.parse(dataStr);
-      if (!Array.isArray(data) || data.length === 0) return { percent: 0, counts: { total: 0, completed: 0, pending: 0, progress: 0, hold: 0 } };
+      const parsed = JSON.parse(dataStr);
+      if (!Array.isArray(parsed) || parsed.length === 0) return { percent: 0, counts: { total: 0, completed: 0, pending: 0, progress: 0, hold: 0 } };
+      
+      // Flatten data based on its structure
+      let data = [];
+      if (parsed[0] && typeof parsed[0] === 'object' && !Array.isArray(parsed[0]) && 'data' in parsed[0]) {
+        // New Multi-table: [{name, data}, ...]
+        parsed.forEach(table => {
+          if (Array.isArray(table.data)) data.push(...table.data);
+        });
+      } else if (Array.isArray(parsed[0])) {
+        // Old Multi-table: [[row, ...], ...]
+        parsed.forEach(table => {
+          if (Array.isArray(table)) data.push(...table);
+        });
+      } else {
+        // Single flat table: [row, ...]
+        data = parsed;
+      }
+      
+      if (data.length === 0) return { percent: 0, counts: { total: 0, completed: 0, pending: 0, progress: 0, hold: 0 } };
       
       const counts = { total: data.length, completed: 0, pending: 0, progress: 0, hold: 0 };
       
@@ -14,7 +33,6 @@ function ProjectDashboard({ project }) {
         const statusKey = Object.keys(row).find(k => k.toLowerCase().includes("status"));
         if (statusKey && row[statusKey]) {
           const val = row[statusKey].toString().trim().toLowerCase();
-          // Extremely robust matching for "completed"
           const isCompleted = val.startsWith("complet") || val.startsWith("compet") || ["done", "success", "finished", "ok"].includes(val);
           const isInProgress = val.includes("progress") || val.includes("ongoing") || val.includes("work");
           const isOnHold = val.includes("hold") || val.includes("pause") || val.includes("block");
@@ -43,26 +61,26 @@ function ProjectDashboard({ project }) {
 
   const renderCircle = (metrics, label, subLabel) => (
     <div className="flex flex-col items-center">
-      <div className="relative w-32 h-32 mb-4">
-        <svg className="w-full h-full -rotate-90">
+      <div className="relative w-48 h-48 mb-6">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
           <circle
-            cx="64" cy="64" r="58"
-            className="fill-none dark:stroke-white/5 stroke-black/5 stroke-[8]"
+            cx="80" cy="80" r="74"
+            className="fill-none dark:stroke-white/5 stroke-black/5 stroke-[12]"
           />
           <circle
-            cx="64" cy="64" r="58"
-            className="fill-none stroke-[var(--accent-color)] stroke-[8] transition-all duration-1000 ease-out"
-            strokeDasharray="364.4"
-            strokeDashoffset={364.4 - (364.4 * metrics.percent) / 100}
+            cx="80" cy="80" r="74"
+            className="fill-none stroke-[var(--accent-color)] stroke-[12] transition-all duration-1000 ease-out"
+            strokeDasharray="465"
+            strokeDashoffset={465 - (465 * metrics.percent) / 100}
             strokeLinecap="round"
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-black dark:text-white text-[var(--text-color)]">{metrics.percent}%</span>
-          <span className="text-[8px] font-black dark:text-indigo-300/60 text-[var(--text-color)] uppercase tracking-widest">{subLabel}</span>
+          <span className="text-4xl font-black dark:text-white text-[var(--text-color)]">{metrics.percent}%</span>
+          <span className="text-[10px] font-black dark:text-indigo-300/60 text-[var(--text-color)] uppercase tracking-widest mt-1">{subLabel}</span>
         </div>
       </div>
-      <p className="text-[10px] font-black dark:text-white/60 text-[var(--text-color)]/80 uppercase tracking-[0.2em]">{label}</p>
+      <p className="text-[12px] font-black dark:text-white/60 text-[var(--text-color)]/80 uppercase tracking-[0.3em]">{label}</p>
     </div>
   );
 

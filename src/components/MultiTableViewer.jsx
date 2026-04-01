@@ -46,8 +46,9 @@ function MultiTableViewer({ tablesData, title = "Table", onSave, toggleSidebar, 
   // ─── Persist all tables upstream ────────────────────────────────────────────
   const saveAll = (updatedTables, silent = false) => {
     setTables(updatedTables);
-    if (onSave) onSave(updatedTables);
-    if (!silent) addToast(`${title} saved`, "success");
+    if (onSave) {
+      onSave(updatedTables);
+    }
   };
 
   // ─── Single-table data update (from TaskSheetViewer) ────────────────────────
@@ -74,18 +75,15 @@ function MultiTableViewer({ tablesData, title = "Table", onSave, toggleSidebar, 
     setTables(updated);
     setActiveIndex(updated.length - 1);
     if (onSave) onSave(updated);
-    addToast(`New ${title} table added`, "success");
   };
 
   // ─── Delete ──────────────────────────────────────────────────────────────────
   const deleteTable = (index) => {
-    const removed = tables[index]?.name || `Table ${index + 1}`;
     const updated = tables.filter((_, i) => i !== index);
     setTables(updated);
     setConfirmDeleteIndex(null);
     setActiveIndex(Math.max(0, Math.min(index, updated.length - 1)));
     if (onSave) onSave(updated);
-    addToast(`"${removed}" deleted`, "info");
   };
 
   const activeTable = tables[activeIndex];

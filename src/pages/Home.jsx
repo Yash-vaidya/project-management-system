@@ -13,61 +13,60 @@ function Home() {
   // Compute metrics dynamically
   const totalProjects = projects.length;
 
+  const getMetrics = (dataStr) => {
+    if (!dataStr || typeof dataStr !== "string") return { total: 0, completed: 0 };
+    try {
+      const parsed = JSON.parse(dataStr);
+      if (!Array.isArray(parsed) || parsed.length === 0) return { total: 0, completed: 0 };
+      
+      let data = [];
+      if (parsed[0] && typeof parsed[0] === 'object' && !Array.isArray(parsed[0]) && 'data' in parsed[0]) {
+        parsed.forEach(table => {
+          if (Array.isArray(table.data)) data.push(...table.data);
+        });
+      } else if (Array.isArray(parsed[0])) {
+        parsed.forEach(table => {
+          if (Array.isArray(table)) data.push(...table);
+        });
+      } else {
+        data = parsed;
+      }
+      
+      let total = data.length;
+      let completed = 0;
+      data.forEach((row) => {
+        const statusKey = Object.keys(row).find((k) => k.toLowerCase().includes("status"));
+        if (statusKey && row[statusKey]) {
+          const val = row[statusKey].toString().trim().toLowerCase();
+          if (val.startsWith("complet") || val.startsWith("compet") || ["done", "success", "finished", "ok"].includes(val)) {
+            completed++;
+          }
+        }
+      });
+      return { total, completed };
+    } catch {
+      return { total: 0, completed: 0 };
+    }
+  };
+
   let totalTasks = 0;
   let completedTasks = 0;
 
   projects.forEach((p) => {
-    if (p.sod && typeof p.sod === "string") {
-      try {
-        const parsed = JSON.parse(p.sod);
-        if (Array.isArray(parsed)) {
-          totalTasks += parsed.length;
-          parsed.forEach((row) => {
-            const statusKey = Object.keys(row).find((k) => k.toLowerCase().includes("status"));
-            if (statusKey && row[statusKey]) {
-              const val = row[statusKey].toString().trim().toLowerCase();
-              if (val.startsWith("complet") || val.startsWith("compet") || ["done", "success", "finished", "ok"].includes(val)) {
-                completedTasks++;
-              }
-            }
-          });
-        }
-      } catch {
-        // ignore parsing errors
-      }
-    }
+    const metrics = getMetrics(p.sod);
+    totalTasks += metrics.total;
+    completedTasks += metrics.completed;
   });
 
   const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
   // Dynamic Chart Data mapping from SOD table
   const chartData = projects.map(p => {
-      let tTasks = 0;
-      let cTasks = 0;
-      
-      if (p.sod && typeof p.sod === "string") {
-        try {
-          const parsed = JSON.parse(p.sod);
-          if (Array.isArray(parsed)) {
-            tTasks = parsed.length;
-            parsed.forEach((row) => {
-              const statusKey = Object.keys(row).find((k) => k.toLowerCase().includes("status"));
-              if (statusKey && row[statusKey]) {
-                const val = row[statusKey].toString().trim().toLowerCase();
-                if (val.startsWith("complet") || val.startsWith("compet") || ["done", "success", "finished", "ok"].includes(val)) {
-                  cTasks++;
-                }
-              }
-            });
-          }
-        } catch {
-          // Ignore parsing errors
-        }
-      }
-      return { 
-        name: p.name, 
-        progress: tTasks === 0 ? 0 : Math.round((cTasks / tTasks) * 100)
-      };
+    const metrics = getMetrics(p.sod);
+    return { 
+      name: p.name, 
+      progress: metrics.total === 0 ? 0 : Math.round((metrics.completed / metrics.total) * 100)
+    };
   });
 
   return (

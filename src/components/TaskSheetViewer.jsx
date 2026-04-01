@@ -11,9 +11,12 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
   const [importText, setImportText] = useState("");
   const { addToast } = useToast();
 
-  const updateData = (newData) => {
+  const updateData = (newData, shouldAutoSave = false) => {
     setHistory(prev => [...prev, data]);
     setData(newData);
+    if (shouldAutoSave && onSave) {
+      onSave(newData);
+    }
   };
 
   const undo = () => {
@@ -51,8 +54,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       const { [colKey]: removed, ...rest } = row;
       return rest;
     });
-    updateData(newData);
-    addToast(`Column "${colKey}" deleted. Use Revert to undo.`, "info");
+    updateData(newData, true);
   };
 
   const mergeWithNext = (colKey) => {
@@ -69,8 +71,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       delete newRow[nextKey];
       return newRow;
     });
-    updateData(newData);
-    addToast(`Merged "${nextKey}" into "${colKey}". Use Revert to undo.`, "info");
+    updateData(newData, true);
   };
 
   const handleImport = () => {
@@ -78,7 +79,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       try {
         const parsed = excelToJson(importText);
         if (parsed.length) {
-          updateData(parsed);
+          updateData(parsed, true);
           setIsImporting(false);
           setImportText("");
           setError("");
@@ -104,7 +105,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
     const initialData = [
       { "Sr No": "1", "Module": "", "Task": "", "Status": "Pending", "Comment": "" }
     ];
-    updateData(initialData);
+    updateData(initialData, true);
   };
 
   useEffect(() => {
@@ -318,7 +319,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                           onChange={(e) => {
                             const newData = [...data];
                             newData[i] = { ...newData[i], [key]: e.target.value };
-                            updateData(newData);
+                            updateData(newData, true);
                           }}
                           className="w-full bg-black/5 dark:bg-white/5 rounded-xl px-3 py-2 dark:text-white text-[var(--text-color)] border dark:border-white/10 border-black/10 focus:border-[var(--accent-color)] focus:outline-none appearance-none cursor-pointer font-bold text-xs"
                         >
@@ -339,7 +340,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                             if (newValue !== row[key]) {
                               const newData = [...data];
                               newData[i] = { ...newData[i], [key]: newValue };
-                              updateData(newData);
+                              updateData(newData, true);
                             }
                           }}
                           className="w-full min-h-[1.5em] bg-transparent dark:text-white text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/20 rounded-xl px-2 transition-all break-words whitespace-pre-wrap font-medium"
@@ -354,7 +355,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                   <button 
                     onClick={() => {
                       const newData = data.filter((_, index) => index !== i);
-                      updateData(newData);
+                      updateData(newData, true);
                     }}
                     className="text-red-400 hover:text-red-300 transition p-2 rounded-lg hover:bg-red-500/20"
                     title="Delete Row"
@@ -374,7 +375,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
             if (!data || data.length === 0) return;
             const newRow = {};
             Object.keys(data[0]).forEach(k => newRow[k] = "");
-            updateData([...data, newRow]);
+            updateData([...data, newRow], true);
           }}
           className="bg-black/10 dark:bg-white/10 hover:bg-[var(--accent-color)] border dark:border-white/10 border-black/10 text-[var(--text-color)] hover:text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all inline-flex items-center gap-2 group"
         >

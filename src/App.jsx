@@ -22,21 +22,30 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const viewport = document.getElementById("main-viewport");
-    if (!viewport) return;
-
-    const handleScroll = () => {
-      setShowScrollTop(viewport.scrollTop > 150);
+    const handleScroll = (e) => {
+      const target = e.target === document ? document.documentElement : e.target;
+      if (target && target.scrollTop !== undefined) {
+         if (target.scrollTop > 150) {
+           setShowScrollTop(true);
+           window._activeScrollPath = target;
+         } else if (target === window._activeScrollPath && target.scrollTop <= 150) {
+           setShowScrollTop(false);
+         }
+      }
     };
 
-    viewport.addEventListener("scroll", handleScroll);
-    return () => viewport.removeEventListener("scroll", handleScroll);
-  }, [isLoggedIn]);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, []);
 
   const scrollToTop = () => {
-    const viewport = document.getElementById("main-viewport");
-    if (viewport) {
-      viewport.scrollTo({ top: 0, behavior: "smooth" });
+    if (window._activeScrollPath && typeof window._activeScrollPath.scrollTo === "function") {
+      window._activeScrollPath.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const viewport = document.getElementById("main-viewport");
+      if (viewport) {
+        viewport.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   };
 
@@ -86,7 +95,7 @@ function App() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-[#ff9999] hover:bg-[#ff8888] text-black w-14 h-14 rounded-full shadow-[0_0_30px_rgba(255,0,0,0.3)] flex items-center justify-center transition-all animate-in fade-in zoom-in duration-300 hover:scale-110 active:scale-95 z-[9999] border-2 border-black/10"
+          className="fixed bottom-8 right-8 bg-red-600 hover:bg-red-500 text-black w-14 h-14 rounded-full shadow-[0_0_30px_rgba(255,0,0,0.3)] flex items-center justify-center transition-all animate-in fade-in zoom-in duration-300 hover:scale-110 active:scale-95 z-[9999] border-2 border-black/10"
           title="Return to Top"
         >
           <span className="text-2xl font-black">↑</span>
