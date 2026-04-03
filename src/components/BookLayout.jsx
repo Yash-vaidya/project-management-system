@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import NotesEditor from "./NotesEditor";
 import TaskSheetViewer from "./TaskSheetViewer";
 import MultiTableViewer from "./MultiTableViewer";
 import ProjectDashboard from "./ProjectDashboard";
+import PDFViewer from "./PDFViewer";
 import { useToast } from "../utils/ToastContext";
 
 function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUpdateProject, toggleSidebar, isSidebarCollapsed }) {
@@ -16,16 +16,6 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
     const timer = setTimeout(() => setFlash(false), 300);
     return () => clearTimeout(timer);
   }, [activePage]);
-
-  const handleSaveNotes = async (newNotes) => {
-    await fetch(`http://localhost:5000/projects/${project.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: newNotes }),
-    });
-    if (onUpdateProject) onUpdateProject({ ...project, notes: newNotes });
-    addToast("Notes saved successfully", "success");
-  };
 
   const handleSaveSheet = async (field, newData) => {
     // newData may be a single table (array of rows) or an array of tables (array of arrays)
@@ -210,18 +200,34 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
 
                 <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 backdrop-blur-xl p-8 rounded-[35px] shadow-lg group hover:bg-[var(--accent-color)]/5 transition-all duration-500 relative">
                   <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-xl font-black flex items-center gap-2 dark:text-white text-slate-800 uppercase tracking-tighter">🏆 Execution Overview</h4>
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] dark:text-indigo-300/40 text-[var(--accent-color)]/40 p-1 border dark:border-white/5 border-black/5 rounded-lg">System Unit 4.2</span>
+                  <h4 className="text-xl font-black flex items-center gap-2 dark:text-white text-slate-800 uppercase tracking-tighter">🏆 Execution Overview</h4>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] dark:text-indigo-300/40 text-[var(--accent-color)]/40 p-1 border dark:border-white/5 border-black/10 rounded-lg">System Unit 4.2</span>
                   </div>
-                  <div 
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleSaveNotes(e.target.innerText)}
-                    className="dark:text-indigo-100/90 text-slate-700 leading-relaxed mb-8 font-medium focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/20 rounded-2xl p-4 bg-black/5 dark:bg-white/5 min-h-[100px] border border-transparent hover:border-[var(--accent-color)]/20 transition-all cursor-text whitespace-pre-wrap"
-                    placeholder="Capture your strategic vision here..."
-                  >
-                    {project.notes || "No summary recorded for this system. Click to initialize strategic documentation."}
-                  </div>
+                  
+                  {project.notes && (Array.isArray(project.notes) || project.notes.startsWith("data:application/pdf;base64,") || project.notes.includes(";base64,")) ? (
+                    <div className="flex items-center gap-6 p-6 dark:bg-white/5 bg-black/5 rounded-[30px] border border-dashed dark:border-white/10 border-black/10 mb-8 group/pdf transition-all hover:bg-[var(--accent-color)]/5">
+                      <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-3xl group-hover/pdf:scale-110 transition-transform">📚</div>
+                      <div className="flex-1">
+                        <p className="text-xs font-black dark:text-white text-slate-800 uppercase tracking-widest mb-1">
+                          {Array.isArray(project.notes) ? "System Resource Library" : "System Documentation Attached"}
+                        </p>
+                        <p className="text-[10px] dark:text-indigo-300/40 text-black/40 font-bold uppercase tracking-widest">
+                          {Array.isArray(project.notes) ? `${project.notes.length} Documents Encoded` : "Type: PDF Vector Document"}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setActivePage("notes")}
+                        className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg transition-all"
+                      >
+                        {Array.isArray(project.notes) && project.notes.length > 1 ? "Open Library" : "View Document"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="dark:text-indigo-100/90 text-slate-700 leading-relaxed mb-8 font-medium p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-transparent whitespace-pre-wrap italic opacity-50">
+                      {project.notes || "No system documentation attached to this node."}
+                    </div>
+                  )}
+
                   <div className="flex gap-4">
                      <span className="bg-[var(--accent-color)]/50 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-[var(--accent-color)]/30 text-white">Type: {project.type}</span>
                      <span className="dark:bg-white/10 bg-black/5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border dark:border-white/10 border-black/10 dark:text-indigo-300 text-[var(--text-color)]">Status: Active</span>
@@ -232,8 +238,12 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
 
             <div className="relative">
               {activePage === "notes" && (
-                <div className="animate-in fade-in zoom-in-95 duration-500">
-                  <NotesEditor value={project.notes || ""} onSave={handleSaveNotes} />
+                <div className="animate-in fade-in zoom-in-95 duration-500 h-full">
+                  <PDFViewer 
+                    data={project.notes} 
+                    title={`${project.name} Documentation`} 
+                    onUpload={(pdfData) => handleSaveSheet("notes", pdfData)}
+                  />
                 </div>
               )}
 

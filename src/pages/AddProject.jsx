@@ -22,7 +22,44 @@ function AddProject() {
   const [sodPreviewData, setSodPreviewData] = useState(null);
   const [sodError, setSodError] = useState("");
 
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState([]); // Array of { name: string, data: string }
+  const [isReadingPdf, setIsReadingPdf] = useState(false);
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setIsReadingPdf(true);
+    
+    files.forEach(file => {
+      if (file.type === "application/pdf") {
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          setNotes(prev => [...prev, { 
+            name: file.name.replace(/\.pdf$/i, ""), 
+            data: re.target.result 
+          }]);
+          addToast(`${file.name} encoded successfully`, "success");
+        };
+        reader.readAsDataURL(file);
+      } else {
+        addToast("Invalid file type. Please upload a PDF.", "error");
+      }
+    });
+
+    setIsReadingPdf(false);
+  };
+
+  const removePdf = (index) => {
+    setNotes(prev => prev.filter((_, i) => i !== index));
+    addToast("Document removed", "info");
+  };
+
+  const updatePdfName = (index, newName) => {
+    setNotes(prev => {
+      const copy = [...prev];
+      copy[index].name = newName;
+      return copy;
+    });
+  };
 
   const handleExcelPaste = (e) => {
     const val = e.target.value;
@@ -88,6 +125,11 @@ function AddProject() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
+  const isBase64 = (str) => {
+    if (!str || typeof str !== 'string') return false;
+    return str.startsWith("data:application/pdf;base64,") || str.includes(";base64,");
+  };
+
   const validateUrl = (url) => {
     return url.includes("docs.google.com/spreadsheets");
   };
@@ -141,7 +183,7 @@ function AddProject() {
       setMomPreviewData(null);
       setSodText("");
       setSodPreviewData(null);
-      setNotes("");
+      setNotes([]);
     } catch (err) {
       console.error(err);
       setFormError("System Error: Could not reach the database.");
@@ -151,8 +193,9 @@ function AddProject() {
   };
 
   return (
-    <div className="p-6 max-w-2xl dark:text-white text-[var(--text-color)]">
-      <h1 className="text-3xl font-black mb-6 uppercase tracking-tighter drop-shadow-sm">Commit Data Point</h1>
+    <div className="min-h-full py-20 px-6 flex flex-col items-center justify-start dark:text-white text-[var(--text-color)] overflow-y-auto">
+      <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <h1 className="text-4xl font-black mb-8 uppercase tracking-tighter drop-shadow-sm text-center">Commit Data Point</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-[var(--nav-bg)] border border-black/10 p-10 rounded-[40px] shadow-2xl">
         {/* Name */}
@@ -426,16 +469,64 @@ function AddProject() {
           )}
         </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-black/40 ml-2">Executive Overview</label>
-          <textarea
-            placeholder="Core objectives, risks, or key updates..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="border border-black/10 bg-white/50 text-black placeholder-black/30 p-4 w-full rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/20 focus:bg-white transition-all font-bold"
-            rows={3}
-          />
+
+
+        {/* Notes / PDF Upload */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between ml-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-black/40">Resource Library (Multi-PDF Support)</label>
+            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-lg border border-indigo-500/20">{notes.length} Docs Attached</span>
+          </div>
+          
+          <div className="flex flex-col gap-6">
+            <input
+              type="file"
+              accept=".pdf"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+              id="pdf-upload"
+            />
+            
+            <label 
+              htmlFor="pdf-upload"
+              className={`border-2 border-dashed border-black/10 hover:border-[var(--accent-color)]/40 bg-white/40 backdrop-blur-sm p-12 rounded-[40px] transition-all cursor-pointer flex flex-col items-center justify-center gap-4 text-center group active:scale-[0.98] ${notes.length > 0 ? 'border-green-500/20 bg-green-500/5' : ''}`}
+            >
+              <div className="text-6xl text-black/10 group-hover:scale-110 group-hover:text-[var(--accent-color)]/20 transition-all">📥</div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-black/40">Inject PDF Documents</p>
+                <p className="text-[10px] text-black/20 font-bold uppercase mt-2">Multiple files supported • Auto-encoding enabled</p>
+              </div>
+            </label>
+
+            {/* List of Documents */}
+            {notes.length > 0 && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                {notes.map((doc, idx) => (
+                  <div key={idx} className="flex gap-4 items-center bg-white/70 backdrop-blur-md p-5 rounded-[25px] border border-black/5 shadow-sm group">
+                    <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📄</div>
+                    <div className="flex-1 space-y-1">
+                      <input 
+                        type="text"
+                        value={doc.name}
+                        onChange={(e) => updatePdfName(idx, e.target.value)}
+                        className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs font-black uppercase tracking-widest text-black w-full"
+                        placeholder="Document Name"
+                      />
+                      <p className="text-[9px] font-bold text-black/30 uppercase">Vector Encoding: {Math.round(doc.data.length / 1024)} KB</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => removePdf(idx)}
+                      className="w-10 h-10 bg-black/5 hover:bg-red-500 hover:text-white rounded-xl flex items-center justify-center transition-all group-hover:opacity-100 opacity-30"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Global Form Error */}
@@ -449,11 +540,12 @@ function AddProject() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-6 py-5 rounded-[25px] font-black text-sm tracking-[0.2em] uppercase shadow-xl shadow-green-600/20 transition-all active:scale-95 w-full mt-4 flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-50 cursor-wait animate-pulse' : 'hover:scale-105'}`}
+          className={`bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-6 py-6 rounded-[30px] font-black text-sm tracking-[0.3em] uppercase shadow-2xl transition-all active:scale-95 w-full mt-6 flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-50 cursor-wait animate-pulse' : 'hover:scale-105'}`}
         >
-          {isSubmitting ? "Processing..." : "💾 Commit System Data"}
+          {isSubmitting ? "Archiving Docs..." : "💾 Commit System Data"}
         </button>
       </form>
+      </div>
     </div>
   );
 }

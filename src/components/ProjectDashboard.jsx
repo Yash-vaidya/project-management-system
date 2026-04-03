@@ -97,7 +97,7 @@ function ProjectDashboard({ project }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-        {renderCircle(sod, "SOD", "Daily Progress")}
+        {renderCircle(sod, "SOD", "Daily Progress"  )}
         {renderCircle(mom, "MOM", "Meeting Sync")}
         {renderCircle(task, "TASK", "Task Lifecycle")}
       </div>
