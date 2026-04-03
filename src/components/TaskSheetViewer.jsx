@@ -11,6 +11,31 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
   const [importText, setImportText] = useState("");
   const { addToast } = useToast();
 
+  const [newStatusLabel, setNewStatusLabel] = useState("");
+  const [newStatusColor, setNewStatusColor] = useState("#8b5cf6");
+  const [statusConfig, setStatusConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`statusConfig_${title}`);
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return {
+      "Pending": "#f59e0b",
+      "In Progress": "#3b82f6",
+      "Completed": "#10b981",
+      "Done": "#10b981",
+      "Hold": "#ef4444"
+    };
+  });
+
+  const handleAddStatus = () => {
+    if (!newStatusLabel.trim()) return;
+    const newConfig = { ...statusConfig, [newStatusLabel.trim()]: newStatusColor };
+    setStatusConfig(newConfig);
+    localStorage.setItem(`statusConfig_${title}`, JSON.stringify(newConfig));
+    setNewStatusLabel("");
+    addToast("Custom status added", "success");
+  };
+
   const updateData = (newData, shouldAutoSave = false) => {
     setHistory(prev => [...prev, data]);
     setData(newData);
@@ -260,7 +285,9 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
               >
                 #
               </th>
-              {Object.keys(data[0]).map((key, i) => (
+              {Object.keys(data[0]).map((key, i) => {
+                const isStatusColumn = key.toLowerCase().includes("status");
+                return (
                 <th key={i} className="p-0 border-r dark:border-white/10 border-black/10 group/header relative" style={{ minWidth: '150px' }}>
                   <div className="flex flex-col h-full min-h-[80px]">
                     <div className="flex items-center justify-between px-4 py-2 bg-black/5 dark:bg-white/5 border-b dark:border-white/10 border-black/10">
@@ -280,7 +307,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                       </button>
                     </div>
                     <div 
-                      className="px-4 py-3 h-full overflow-hidden flex-1" 
+                      className="px-4 py-3 h-full overflow-hidden flex-1 flex flex-col gap-2" 
                       style={{ resize: 'horizontal', minWidth: '100%', maxWidth: '600px' }}
                     >
                       <div 
@@ -291,11 +318,35 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                       >
                         {key}
                       </div>
+                      {isStatusColumn && (
+                        <div className="flex items-center gap-1 mt-auto pt-2 border-t dark:border-white/10 border-black/10">
+                          <input 
+                            type="text" 
+                            placeholder="New Status" 
+                            value={newStatusLabel} 
+                            onChange={e => setNewStatusLabel(e.target.value)} 
+                            className="w-full text-[10px] p-1 rounded bg-black/10 dark:bg-white/10 dark:text-white text-black font-medium border-none outline-none focus:ring-1 focus:ring-[var(--accent-color)] focus:bg-black/20 dark:focus:bg-black/40 transition-colors"
+                          />
+                          <input 
+                            type="color" 
+                            value={newStatusColor} 
+                            onChange={e => setNewStatusColor(e.target.value)} 
+                            className="w-5 h-5 rounded cursor-pointer border-none bg-transparent flex-shrink-0"
+                            title="Status Color"
+                          />
+                          <button 
+                            onClick={handleAddStatus} 
+                            className="text-[10px] bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-2 py-1 rounded shadow transition-all flex-shrink-0"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--accent-color)] opacity-0 group-hover/header:opacity-30 transition-opacity"></span>
                 </th>
-              ))}
+              )})}
               <th className="px-6 py-4 text-center min-w-[80px]">Vector</th>
             </tr>
           </thead>
@@ -315,19 +366,23 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                     <td key={idx} className="border-r border-white/10 p-4 relative align-top">
                       {isStatus ? (
                         <select 
-                          value={row[key]} 
+                          value={row[key] || "Pending"} 
                           onChange={(e) => {
                             const newData = [...data];
                             newData[i] = { ...newData[i], [key]: e.target.value };
                             updateData(newData, true);
                           }}
-                          className="w-full bg-black/5 dark:bg-white/5 rounded-xl px-3 py-2 dark:text-white text-[var(--text-color)] border dark:border-white/10 border-black/10 focus:border-[var(--accent-color)] focus:outline-none appearance-none cursor-pointer font-bold text-xs"
+                          style={{
+                            backgroundColor: statusConfig[row[key]] ? `${statusConfig[row[key]]}26` : undefined, // 15% opacity wrapper
+                            color: statusConfig[row[key]] || undefined,
+                            borderColor: statusConfig[row[key]] ? `${statusConfig[row[key]]}80` : undefined, // 50% opacity border
+                          }}
+                          className="w-full bg-black/5 dark:bg-white/5 rounded-xl px-3 py-2 dark:text-white text-[var(--text-color)] border dark:border-white/10 border-black/10 focus:border-[var(--accent-color)] focus:outline-none appearance-none cursor-pointer font-black text-xs tracking-wider transition-all"
                         >
-                          <option className="text-black bg-white" value="Pending">Pending</option>
-                          <option className="text-black bg-white" value="In Progress">In Progress</option>
-                          <option className="text-black bg-white" value="Completed">Completed</option>
-                          <option className="text-black bg-white" value="Hold">Hold</option>
-                          {!["Pending", "In Progress", "Completed", "Hold"].includes(row[key]) && row[key] && (
+                          {Object.keys(statusConfig).map(statusName => (
+                            <option key={statusName} className="text-black bg-white" value={statusName}>{statusName}</option>
+                          ))}
+                          {!statusConfig[row[key]] && row[key] && (
                             <option className="text-black bg-white" value={row[key]}>{row[key]}</option>
                           )}
                         </select>
