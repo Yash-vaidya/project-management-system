@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProjectBook from "../components/ProjectBook";
 import BookLayout from "../components/BookLayout";
 import { useToast } from "../utils/ToastContext";
 
 function Projects({ toggleSidebar, isSidebarCollapsed }) {
+  const [searchParams] = useSearchParams();
+  const projectIdParam = searchParams.get("id");
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [activePage, setActivePage] = useState(null);
@@ -15,8 +18,17 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
   useEffect(() => {
     fetch("http://localhost:5000/projects")
       .then((res) => res.json())
-      .then((data) => setProjects(data));
-  }, []);
+      .then((data) => {
+        setProjects(data);
+        if (projectIdParam) {
+           const proj = data.find(p => p.id.toString() === projectIdParam.toString());
+           if (proj) {
+              setSelectedProject(proj);
+              setActivePage(null);
+           }
+        }
+      });
+  }, [projectIdParam]);
 
   const handlePageChange = (catId, direction) => {
     setPageMap(prev => ({
@@ -142,8 +154,9 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
           activePage={activePage}
           setActivePage={setActivePage}
           goBack={() => {
-            if (activePage) setActivePage(null);
-            else setSelectedProject(null);
+            setSelectedProject(null);
+            setActivePage(null);
+            setSearchParams({});
           }}
           onDelete={() => handleDeleteProject(selectedProject.id)}
           onUpdateProject={handleUpdateProject}

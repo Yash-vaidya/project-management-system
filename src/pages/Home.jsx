@@ -64,6 +64,7 @@ function Home() {
   const chartData = projects.map(p => {
     const metrics = getMetrics(p.sod);
     return { 
+      id: p.id,
       name: p.name, 
       progress: metrics.total === 0 ? 0 : Math.round((metrics.completed / metrics.total) * 100)
     };
@@ -123,7 +124,7 @@ function Home() {
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12">
           {chartData.map((proj, idx) => (
-            <div key={idx} className="flex flex-col items-center group transition-transform hover:scale-110 duration-500">
+            <Link to={`/projects?id=${proj.id}`} key={idx} className="flex flex-col items-center group transition-transform hover:scale-110 duration-500 cursor-pointer no-underline">
                <div className="relative w-36 h-36 mb-6">
                  <svg className="w-full h-full -rotate-90">
                    <circle
@@ -146,7 +147,7 @@ function Home() {
                <h3 className="text-[11px] font-black dark:text-white text-[var(--text-color)]/80 uppercase tracking-tighter text-center max-w-[120px] truncate group-hover:text-[var(--accent-color)] transition-colors">
                  {proj.name}
                </h3>
-            </div>
+            </Link>
           ))}
         </div>
         
