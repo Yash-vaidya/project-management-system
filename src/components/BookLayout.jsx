@@ -8,6 +8,9 @@ import { useToast } from "../utils/ToastContext";
 function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUpdateProject, toggleSidebar, isSidebarCollapsed }) {
   const [flash, setFlash] = useState(false);
   const [isIndexCollapsed, setIsIndexCollapsed] = useState(false);
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [aboutText, setAboutText] = useState(project.about || "This project node is currently synchronized with the central database. Use the navigation panel to manage tasks, meetings, and system documentation.");
   const { addToast } = useToast();
 
   // Trigger flash animation when activePage changes
@@ -17,7 +20,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
     return () => clearTimeout(timer);
   }, [activePage]);
 
-  const handleSaveSheet = async (field, newData) => {
+  const handleSaveSheet = async (field, newData, options = {}) => {
     // newData may be a single table (array of rows) or an array of tables (array of arrays)
     const serialized = typeof newData === "string" ? newData : JSON.stringify(newData);
     await fetch(`http://localhost:5000/projects/${project.id}`, {
@@ -26,8 +29,10 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
       body: JSON.stringify({ [field]: serialized }),
     });
     if (onUpdateProject) onUpdateProject({ ...project, [field]: serialized });
-    const fieldName = field === 'mom' ? 'MOM' : field === 'sod' ? 'SOD' : 'Task Sheet';
-    addToast(`${fieldName} saved successfully`, "success");
+    if (!options.silent) {
+      const fieldName = field === 'mom' ? 'MOM' : field === 'sod' ? 'SOD' : 'Task Sheet';
+      addToast(`${fieldName} saved successfully`, "success");
+    }
   };
 
   // Advanced Helper to calculate dynamic metrics for the Overview
@@ -78,205 +83,273 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
   };
 
   return (
-    <div className={`relative flex flex-col items-center justify-center min-h-[85vh] p-0 md:p-6 w-full transition-all duration-500`}>
-      {/* ❌ Fixed Close Button (Top Right) */}
-      <button 
-        onClick={goBack}
-        className="fixed top-8 right-8 z-[1000] bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-6 py-3 rounded-2xl flex items-center gap-3 border border-red-500/20 shadow-2xl transition-all hover:scale-110 active:scale-95 group font-black uppercase tracking-widest text-[10px]"
-        title="Return to Projects Library"
-      >
-        <span className="text-2xl font-light group-hover:rotate-90 transition-transform">×</span>
-        <span className="hidden md:block">Back to Library</span>
-      </button>
+    <>
+    <div className="max-w-[1600px] mx-auto animate-fadeIn">
+      {/* Detail Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <button 
+              onClick={goBack}
+              className="p-2 hover:bg-[var(--bg-color)] rounded-lg text-[var(--text-secondary)] transition-all"
+              title="Return to Library"
+            >
+              ⬅️
+            </button>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{project.name}</h1>
+            <span className="px-2 py-0.5 bg-[var(--primary-color)]/10 text-[var(--primary-color)] text-[10px] font-bold uppercase rounded tracking-widest">
+              {project.type}
+            </span>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] font-medium ml-10">Project Synchronization Vector: Node #{project.id}</p>
+        </div>
+        
+        <div className="flex gap-3 ml-10 md:ml-0">
+          <button 
+            onClick={() => setIsEditingMetadata(true)}
+            className="p-2 px-4 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
+          >
+            ✏️ Edit Metadata
+          </button>
+          <button 
+            onClick={onDelete}
+            className="p-2 px-4 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
+          >
+            🗑️ Delete Project
+          </button>
+        </div>
+      </div>
 
-      {/* 📖 The Open Book Container - Transitions to Full Width on Collapse */}
-      <div className={`relative w-full ${isIndexCollapsed ? "max-w-none px-4" : "max-w-6xl"} flex bg-transparent transition-all duration-500`}>
-           {/* ⬅️ Left Page (The Index / Sidebar) */}
-        <div className={`
-          ${isIndexCollapsed ? "w-20" : "flex-[0.35]"} 
-          dark:bg-white/10 bg-[var(--nav-bg)] backdrop-blur-3xl border dark:border-white/20 border-black/10 
-          rounded-l-[40px] shadow-[-20px_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transition-all duration-500 z-30
-        `}>
-          <div className={`p-6 ${isIndexCollapsed ? "px-0 flex flex-col items-center" : ""}`}>
-            <div className={`flex justify-between items-start mb-8 w-full ${isIndexCollapsed ? "flex-col items-center gap-4" : ""}`}>
-              <div className={isIndexCollapsed ? "text-center" : ""}>
-                {!isIndexCollapsed ? (
-                  <>
-                    <h2 className="text-xl font-black dark:text-white text-[var(--text-color)] tracking-tight uppercase mb-1 drop-shadow-md truncate max-w-[150px]">{project.name}</h2>
-                    <div className="h-1 w-8 bg-[var(--accent-color)] rounded-full"></div>
-                  </>
-                ) : (
-                  <div className="w-10 h-10 bg-[var(--accent-color)] rounded-xl flex items-center justify-center shadow-lg text-white font-black">
-                    {project.name.charAt(0).toUpperCase()}
+      {/* Detail Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Project Navigation (Vertical Tabs) */}
+        <div className="lg:col-span-1 space-y-2">
+          {[
+            { id: null, label: "Overview", icon: "📊" },
+            { id: "task", label: "Task Progress", icon: "📄" },
+            { id: "sod", label: "SOD Matrix", icon: "🗓️" },
+            { id: "mom", label: "MOM Records", icon: "📝" },
+            { id: "notes", label: "System Docs", icon: "📓" },
+            { id: "dashboard", label: "Analytics Hub", icon: "📈" }
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActivePage(item.id)}
+              className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all font-bold uppercase tracking-widest text-[10px] ${
+                activePage === item.id 
+                  ? "bg-[var(--primary-color)] text-white shadow-lg shadow-[#556EE6]/20" 
+                  : "bg-[var(--card-bg)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:bg-[var(--bg-color)]"
+              }`}
+            >
+              <span className="text-xl">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+          
+          <div className="card-saas p-6 mt-8">
+            <h4 className="text-[10px] font-black uppercase text-[var(--text-secondary)] mb-4 tracking-tighter">Node Telemetry</h4>
+            <div className="space-y-4">
+               <div>
+                  <div className="flex justify-between text-[9px] font-bold mb-1">
+                    <span>AGGR. PROGRESS</span>
+                    <span>{Math.round((stats.completed / (stats.total || 1)) * 100)}%</span>
                   </div>
-                )}
-              </div>
-              {onDelete && !isIndexCollapsed && (
-                <button 
-                  onClick={onDelete}
-                  className="text-red-400 hover:text-red-300 bg-white/5 hover:bg-red-500/20 p-2 rounded-full transition border border-white/5"
-                  title="Delete Project"
-                >
-                  🗑️
-                </button>
-              )}
+                  <div className="w-full h-1 bg-[var(--border-color)] rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[var(--primary-color)]" 
+                      style={{ width: `${(stats.completed / (stats.total || 1)) * 100}%` }}
+                    ></div>
+                  </div>
+               </div>
+               <div className="flex justify-between items-center bg-[var(--bg-color)]/30 p-2 rounded">
+                 <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase">Synced Nodes</span>
+                 <span className="text-[10px] font-black text-[var(--text-primary)]">{stats.total}</span>
+               </div>
             </div>
-
-            <div className={`flex-1 flex flex-col gap-3 w-full ${isIndexCollapsed ? "items-center" : ""}`}>
-              {!isIndexCollapsed && <h3 className="text-[10px] font-black dark:text-indigo-300/60 text-[var(--text-color)]/60 uppercase tracking-[0.2em] mb-3 border-b dark:border-indigo-500/20 border-black/10 pb-2">📂 Index</h3>}
-              
-              {[
-                { id: null, label: "System Overview", icon: "📊" },
-                { id: "sod", label: "SOD Progress", icon: "🗓️" },
-                { id: "task", label: "Task Progress", icon: "📄" },
-                { id: "mom", label: "MOM Tracker", icon: "📝" },
-                { id: "notes", label: "Notes", icon: "📓" },
-                { id: "dashboard", label: "Analytics Hub", icon: "📈" }
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActivePage(item.id)}
-                  title={isIndexCollapsed ? item.label : ""}
-                  className={`flex items-center transition-all duration-300 group border border-transparent ${
-                    isIndexCollapsed ? "justify-center w-12 h-12 rounded-2xl" : "gap-3 p-3 rounded-xl hover:translate-x-1"
-                  } ${
-                    activePage === item.id 
-                      ? "bg-[var(--accent-color)] shadow-xl shadow-green-600/20 text-white" 
-                      : "dark:bg-white/5 bg-black/5 hover:dark:bg-white/10 hover:bg-black/10 dark:text-indigo-100/70 text-[var(--text-color)]/70 dark:hover:text-white hover:text-[var(--text-color)]"
-                  }`}
-                >
-                  <span className={`${isIndexCollapsed ? "text-xl" : "text-xl"} group-hover:scale-110 transition-transform`}>{item.icon}</span>
-                  {!isIndexCollapsed && <span className="font-black tracking-widest text-[10px] uppercase">{item.label}</span>}
-                </button>
-              ))}
-            </div>
-
-            {/* Previous Close button was here */}
           </div>
         </div>
 
-        {/* 📘 The Spine (Central Divider) with Sidebar Toggle */}
-        <div className="w-10 bg-gradient-to-r from-black/50 via-black/20 to-black/50 shadow-[inset_0_0_20px_rgba(0,0,0,0.6)] z-40 flex flex-col items-center py-10 relative">
-          <button 
-            onClick={() => setIsIndexCollapsed(!isIndexCollapsed)}
-            className={`absolute top-10 left-1/2 -translate-x-1/2 w-8 h-8 bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] rounded-xl flex items-center justify-center text-white shadow-2xl transition-all duration-500 z-50 hover:scale-110 active:scale-95`}
-            title={isIndexCollapsed ? "Expand Index" : "Collapse to Sidebar"}
-          >
-             <span className={`transition-transform duration-500 text-xs ${isIndexCollapsed ? "rotate-180" : ""}`}>
-               ◀
-             </span>
-          </button>
-          <div className="w-[1px] h-full bg-white/10 px-[1px]"></div>
-        </div>
+        {/* Modular Content Area */}
+        <div className="lg:col-span-3 space-y-6">
+          {!activePage && (
+            <div className="space-y-8 animate-fadeIn">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="card-saas p-6 border-l-4 border-l-[var(--primary-color)]">
+                    <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">Total Tasks</p>
+                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.total}</p>
+                  </div>
+                  <div className="card-saas p-6 border-l-4 border-l-[var(--success)]">
+                    <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">Completed</p>
+                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.completed}</p>
+                  </div>
+                  <div className="card-saas p-6 border-l-4 border-l-[var(--warning)]">
+                    <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">Meetings</p>
+                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.meetings}</p>
+                  </div>
+               </div>
 
-        {/* ➡️ Right Page (Dynamic Content Area) - Expands to Full Screen on Collapse */}
-        <div className={`flex-1 dark:bg-white/5 bg-white backdrop-blur-3xl border dark:border-white/20 border-black/10 rounded-r-[40px] shadow-[20px_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col z-10 relative transition-all duration-500`}>
-          
-          {/* Transition Slide effect (Page Reveal) */}
-          <div className={`absolute inset-0 bg-[var(--bg-color)] z-40 transition-transform duration-700 ease-in-out ${flash ? 'translate-x-0' : 'translate-x-full'}`}></div>
-
-          <div id="scrollable-content" className={`flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar transition-all duration-500 delay-150 ${flash ? 'opacity-0 scale-95 translate-x-4' : 'opacity-100 scale-100 translate-x-0'}`}>
-            {!activePage && (
-              <div className="animate-in fade-in slide-in-from-bottom-5 duration-700">
-                 {/* Top Metrics Row */}
-                 <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 backdrop-blur-xl p-6 rounded-3xl shadow-lg group hover:bg-[var(--accent-color)]/5 transition-all duration-500">
-                    <p className="dark:text-indigo-300/40 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-1">Total Tasks</p>
-                    <p className="text-5xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md">{stats.total}</p>
-                  </div>
-                  <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 backdrop-blur-xl p-6 rounded-3xl shadow-lg group hover:bg-[var(--accent-color)]/5 transition-all duration-500">
-                    <p className="dark:text-indigo-300/40 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-1">In Progress</p>
-                    <p className="text-5xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md">{stats.inProgress}</p>
-                  </div>
-                  <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 backdrop-blur-xl p-6 rounded-3xl shadow-lg group hover:bg-[var(--accent-color)]/5 transition-all duration-500">
-                    <p className="dark:text-indigo-300/40 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-1">Completed</p>
-                    <p className="text-5xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md">{stats.completed}</p>
-                  </div>
-                  <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 backdrop-blur-xl p-6 rounded-3xl shadow-lg group hover:bg-[var(--accent-color)]/5 transition-all duration-500">
-                    <p className="dark:text-indigo-300/40 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-1">Meetings</p>
-                    <p className="text-5xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md">{stats.meetings}</p>
-                  </div>
-                </div>
-
-                <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 backdrop-blur-xl p-8 rounded-[35px] shadow-lg group hover:bg-[var(--accent-color)]/5 transition-all duration-500 relative">
-                  <div className="flex justify-between items-start mb-4">
-                  <h4 className="text-xl font-black flex items-center gap-2 dark:text-white text-slate-800 uppercase tracking-tighter">🏆 Execution Overview</h4>
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] dark:text-indigo-300/40 text-[var(--accent-color)]/40 p-1 border dark:border-white/5 border-black/10 rounded-lg">System Unit 4.2</span>
-                  </div>
+               <div className="card-saas p-8 min-h-[400px] flex flex-col justify-center items-center text-center relative group">
+                  <div className="w-20 h-20 bg-[var(--primary-color)]/10 rounded-full flex items-center justify-center text-4xl mb-6">🛰️</div>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Project Execution Core</h3>
                   
-                  {project.notes && (Array.isArray(project.notes) || project.notes.startsWith("data:application/pdf;base64,") || project.notes.includes(";base64,")) ? (
-                    <div className="flex items-center gap-6 p-6 dark:bg-white/5 bg-black/5 rounded-[30px] border border-dashed dark:border-white/10 border-black/10 mb-8 group/pdf transition-all hover:bg-[var(--accent-color)]/5">
-                      <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-3xl group-hover/pdf:scale-110 transition-transform">📚</div>
-                      <div className="flex-1">
-                        <p className="text-xs font-black dark:text-white text-slate-800 uppercase tracking-widest mb-1">
-                          {Array.isArray(project.notes) ? "System Resource Library" : "System Documentation Attached"}
-                        </p>
-                        <p className="text-[10px] dark:text-indigo-300/40 text-black/40 font-bold uppercase tracking-widest">
-                          {Array.isArray(project.notes) ? `${project.notes.length} Documents Encoded` : "Type: PDF Vector Document"}
-                        </p>
+                  {isEditingAbout ? (
+                    <div className="w-full max-w-2xl mb-8 flex flex-col gap-3">
+                      <textarea 
+                        value={aboutText}
+                        onChange={(e) => setAboutText(e.target.value)}
+                        className="w-full h-48 p-4 rounded-xl resize-none outline-none font-medium text-black bg-white shadow-inner focus:ring-4 focus:ring-[var(--primary-color)]/30 transition-all text-sm leading-relaxed"
+                        placeholder="Enter project details..."
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => setIsEditingAbout(false)}
+                          className="px-4 py-2 text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] uppercase tracking-wide transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setIsEditingAbout(false);
+                            handleSaveSheet("about", aboutText);
+                          }}
+                          className="btn-primary py-2 px-6 text-xs shadow-none"
+                        >
+                          Save Notes
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => setActivePage("notes")}
-                        className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg transition-all"
-                      >
-                        {Array.isArray(project.notes) && project.notes.length > 1 ? "Open Library" : "View Document"}
-                      </button>
                     </div>
                   ) : (
-                    <div className="dark:text-indigo-100/90 text-slate-700 leading-relaxed mb-8 font-medium p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-transparent whitespace-pre-wrap italic opacity-50">
-                      {project.notes || "No system documentation attached to this node."}
+                    <div className="max-w-2xl mb-8 relative">
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
+                        {aboutText}
+                      </p>
+                      <button 
+                        onClick={() => setIsEditingAbout(true)}
+                        className="absolute -right-8 -top-2 p-2 opacity-0 group-hover:opacity-100 bg-[var(--bg-color)] text-[var(--text-secondary)] hover:text-[var(--primary-color)] font-bold text-[10px] uppercase rounded transition-all shadow-sm"
+                      >
+                        ✏️ Edit About
+                      </button>
                     </div>
                   )}
 
-                  <div className="flex gap-4">
-                     <span className="bg-[var(--accent-color)]/50 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-[var(--accent-color)]/30 text-white">Type: {project.type}</span>
-                     <span className="dark:bg-white/10 bg-black/5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border dark:border-white/10 border-black/10 dark:text-indigo-300 text-[var(--text-color)]">Status: Active</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="relative">
-              {activePage === "notes" && (
-                <div className="animate-in fade-in zoom-in-95 duration-500 h-full">
-                  <PDFViewer 
-                    data={project.notes} 
-                    title={`${project.name} Documentation`} 
-                    onUpload={(pdfData) => handleSaveSheet("notes", pdfData)}
-                  />
-                </div>
-              )}
-
-              {activePage === "task" && (
-                <div className="animate-in fade-in zoom-in-95 duration-500">
-                  <TaskSheetViewer taskSheet={project.taskSheet} onSave={(data) => handleSaveSheet("taskSheet", data)} toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
-                </div>
-              )}
-
-              {activePage === "mom" && (
-                <div className="animate-in fade-in zoom-in-95 duration-500">
-                  <MultiTableViewer tablesData={project.mom} title="MOM" onSave={(data) => handleSaveSheet("mom", data)} toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
-                </div>
-              )}
-
-              {activePage === "sod" && (
-                <div className="animate-in fade-in zoom-in-95 duration-500">
-                  <MultiTableViewer tablesData={project.sod} title="SOD" onSave={(data) => handleSaveSheet("sod", data)} toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
-                </div>
-              )}
-
-              {activePage === "dashboard" && (
-                <div className="animate-in fade-in zoom-in-95 duration-500">
-                   <ProjectDashboard project={project} />
-                </div>
-              )}
+                  {!isEditingAbout && (
+                    <button 
+                      onClick={() => setIsEditingAbout(true)}
+                      className="btn-primary px-8"
+                    >
+                      ✏️ Edit About
+                    </button>
+                  )}
+               </div>
             </div>
-          </div>
-          
-        </div>
+          )}
 
+          {activePage === "notes" && (
+            <div className="animate-fadeIn card-saas overflow-hidden p-0 h-[700px]">
+              <PDFViewer 
+                data={project.notes} 
+                title={`${project.name} Documentation`} 
+                onUpload={(pdfData) => handleSaveSheet("notes", pdfData)}
+              />
+            </div>
+          )}
+
+          {activePage === "task" && (
+            <div className="animate-fadeIn">
+              <TaskSheetViewer taskSheet={project.taskSheet} onSave={(data) => handleSaveSheet("taskSheet", data)} toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
+            </div>
+          )}
+
+          {activePage === "mom" && (
+            <div className="animate-fadeIn">
+              <MultiTableViewer tablesData={project.mom} title="MOM" onSave={(data) => handleSaveSheet("mom", data)} toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
+            </div>
+          )}
+
+          {activePage === "sod" && (
+            <div className="animate-fadeIn">
+              <MultiTableViewer tablesData={project.sod} title="SOD" onSave={(data) => handleSaveSheet("sod", data)} toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
+            </div>
+          )}
+
+          {activePage === "dashboard" && (
+            <div className="animate-fadeIn">
+               <ProjectDashboard project={project} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
+
+    {/* Metadata Edit Modal */}
+    {isEditingMetadata && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200 text-left">
+        <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Update Project Identity</h3>
+            <button onClick={() => setIsEditingMetadata(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
+          </div>
+          
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const name = e.target.projectName.value;
+              const type = e.target.projectType.value;
+              try {
+                await fetch(`http://localhost:5000/projects/${project.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name, type }),
+                });
+                if (onUpdateProject) onUpdateProject({ ...project, name, type });
+                addToast("Project identity updated", "success");
+                setIsEditingMetadata(false);
+              } catch (err) {
+                addToast("Failed to update project", "error");
+              }
+            }} 
+            className="p-6 space-y-5"
+          >
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Alias / Name</label>
+              <input 
+                name="projectName"
+                type="text" 
+                defaultValue={project.name}
+                className="input-saas w-full h-11"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Sector Assignment</label>
+              <select 
+                name="projectType"
+                defaultValue={project.type}
+                className="input-saas w-full h-11 bg-[var(--card-bg)]"
+              >
+                <option value="mern">MERN Stack</option>
+                <option value="dotnet">.NET Development</option>
+                <option value="website">Websites</option>
+              </select>
+            </div>
+            
+            <div className="pt-4 flex justify-end gap-3">
+              <button 
+                type="button"
+                onClick={() => setIsEditingMetadata(false)}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-colors"
+              >
+                Cancel Protocol
+              </button>
+              <button type="submit" className="btn-primary">
+                Commit Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

@@ -7,6 +7,8 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+  const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [importType, setImportType] = useState("excel");
   const [importText, setImportText] = useState("");
   const { addToast } = useToast();
@@ -33,14 +35,23 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
     setStatusConfig(newConfig);
     localStorage.setItem(`statusConfig_${title}`, JSON.stringify(newConfig));
     setNewStatusLabel("");
-    addToast("Custom status added", "success");
   };
 
-  const updateData = (newData, shouldAutoSave = false) => {
-    setHistory(prev => [...prev, data]);
+  const handleDeleteStatus = (label) => {
+    const newConfig = { ...statusConfig };
+    delete newConfig[label];
+    setStatusConfig(newConfig);
+    localStorage.setItem(`statusConfig_${title}`, JSON.stringify(newConfig));
+  };
+
+  const updateData = (newData, autoSave = false, options = {}) => {
+    // Check if data actually changed before adding to history
+    if (JSON.stringify(data) !== JSON.stringify(newData)) {
+      setHistory(prev => [...prev, data]);
+    }
     setData(newData);
-    if (shouldAutoSave && onSave) {
-      onSave(newData);
+    if (autoSave && onSave) {
+      onSave(newData, options);
     }
   };
 
@@ -71,13 +82,36 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
     const colName = prompt("Enter new column name:");
     if (!colName) return;
     const newData = data.map(row => ({ ...row, [colName]: "" }));
-    updateData(newData);
+    updateData(newData, true);
+    addToast("Column added successfully", "success");
   };
 
   const deleteColumn = (colKey) => {
     const newData = data.map(row => {
       const { [colKey]: removed, ...rest } = row;
       return rest;
+    });
+    updateData(newData, true);
+  };
+
+  const moveColumn = (colKey, direction) => {
+    const keys = Object.keys(data[0]);
+    const index = keys.indexOf(colKey);
+    if (index === -1) return;
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= keys.length) return;
+
+    const newKeys = [...keys];
+    const temp = newKeys[index];
+    newKeys[index] = newKeys[newIndex];
+    newKeys[newIndex] = temp;
+
+    const newData = data.map(row => {
+      const newRow = {};
+      newKeys.forEach(k => {
+        newRow[k] = row[k];
+      });
+      return newRow;
     });
     updateData(newData, true);
   };
@@ -135,16 +169,19 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
 
   useEffect(() => {
     if (!taskSheet) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData([]);
       return;
     }
     try {
       const parsed = typeof taskSheet === 'string' ? JSON.parse(taskSheet) : taskSheet;
       if (Array.isArray(parsed)) {
-        setData(parsed);
-        setError("");
-        setHistory([]);
+        // Only clear history if the incoming data is significantly different from current local data
+        // This prevents the history crash when auto-saving.
+        if (JSON.stringify(data) !== JSON.stringify(parsed)) {
+          setData(parsed);
+          setHistory([]);
+          setError("");
+        }
       } else {
         setError("Invalid table data format.");
       }
@@ -203,189 +240,155 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
   }
 
   return (
-    <div className="border dark:border-white/20 border-black/10 rounded-3xl overflow-hidden dark:bg-white/5 bg-black/5 shadow-2xl max-w-full mt-4 flex flex-col items-stretch transition-all duration-300">
-      <div className="dark:bg-white/10 bg-black/5 p-6 border-b dark:border-white/20 border-black/10 flex justify-between items-center backdrop-blur-3xl">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={toggleSidebar}
-            className="dark:bg-white/10 bg-black/5 dark:hover:bg-white/20 hover:bg-black/10 dark:text-white text-[var(--text-color)] p-2 rounded-xl transition-all border dark:border-white/10 border-black/10"
-            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {isSidebarCollapsed ? "➡️" : "⬅️"}
-          </button>
-          <h3 className="font-black dark:text-white text-[var(--text-color)] uppercase tracking-tighter">{title} <span className="text-[var(--accent-color)] opacity-50 text-[10px]">Data Grid</span></h3>
-        </div>
+    <>
+    <div className="card-saas p-0 overflow-hidden animate-fadeIn">
+      {/* Table Header / Action Bar */}
+      <div className="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--bg-color)]/30 flex justify-between items-center">
         <div className="flex items-center gap-3">
+          <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-tight">{title}</h3>
+          <span className="px-2 py-0.5 bg-[var(--primary-color)]/10 text-[var(--primary-color)] text-[10px] font-bold rounded">
+            {data.length} RECORDS
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => setIsImporting(!isImporting)}
-            className="text-[10px] bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest transition-all border border-indigo-500/20"
+            className="p-1.5 px-3 bg-[var(--bg-color)] hover:bg-[var(--border-color)] rounded text-[10px] font-bold uppercase transition-all"
           >
              📥 Import
           </button>
           <button 
-            onClick={addColumn}
-            className="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest transition-all border border-emerald-500/20"
+            onClick={() => setIsManageModalOpen(true)}
+            className="p-1.5 px-3 bg-[var(--primary-color)] text-white hover:opacity-90 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-2"
           >
-            ➕ Col
+            ⚙️ Table Management
           </button>
-          <span className="text-[10px] bg-[var(--accent-color)] px-4 py-1.5 rounded-full text-white shadow-lg font-black uppercase tracking-[0.2em]">{data.length} Nodes</span>
         </div>
       </div>
 
+      {/* Import Panel */}
       {isImporting && (
-        <div className="p-6 bg-indigo-950/30 border-b border-white/10 backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="p-6 bg-[var(--bg-color)] border-b border-[var(--border-color)] animate-fadeIn">
           <div className="flex gap-4 mb-4">
             <button 
               onClick={() => setImportType("excel")}
-              className={`px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${importType === "excel" ? "bg-indigo-500 text-white shadow-lg" : "bg-white/5 text-indigo-200"}`}
+              className={`px-4 py-2 rounded font-bold text-xs uppercase transition-all ${importType === "excel" ? "bg-[var(--primary-color)] text-white shadow-md" : "bg-[var(--bg-color)] text-[var(--text-secondary)]"}`}
             >
-              Excel Matrix
+              Paste Excel
             </button>
             <button 
               onClick={() => setImportType("google")}
-              className={`px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${importType === "google" ? "bg-indigo-500 text-white shadow-lg" : "bg-white/5 text-indigo-200"}`}
+              className={`px-4 py-2 rounded font-bold text-xs uppercase transition-all ${importType === "google" ? "bg-[var(--primary-color)] text-white shadow-md" : "bg-[var(--bg-color)] text-[var(--text-secondary)]"}`}
             >
-              Google Vector
+              Remote Link
             </button>
           </div>
           <div className="flex gap-4">
             {importType === "excel" ? (
               <textarea 
-                placeholder="Paste system data matrix directly from source..."
+                placeholder="Paste spreadsheet cells here..."
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
-                className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-4 text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-xs"
-                rows={3}
+                className="input-saas flex-1 h-24 resize-none text-[11px] font-mono"
               />
             ) : (
               <input 
-                placeholder="Enter secure Google Drive vector link..."
+                placeholder="https://docs.google.com/spreadsheets/d/..."
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
-                className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-4 text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-xs"
+                className="input-saas flex-1 h-11"
               />
             )}
             <button 
               onClick={handleImport}
-              className="bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all"
+              className="btn-primary h-11 px-8 shadow-none"
             >
-              Injection
+              Import Data
             </button>
           </div>
         </div>
       )}
-      <div className="overflow-x-auto pb-6 custom-scrollbar">
-        <table className="w-full text-sm text-left dark:text-indigo-100 text-[var(--text-color)] table-auto border-collapse">
-          <thead className="text-[10px] uppercase dark:bg-white/10 bg-black/20 dark:text-indigo-50 text-white font-black tracking-widest">
+
+      {/* Main Table Grid */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-[11px]">
+          <thead className="bg-[var(--bg-color)]/50 text-[10px] text-[var(--text-secondary)] font-bold uppercase border-b border-[var(--border-color)]">
             <tr>
-              <th 
-                className="px-6 py-4 border-r dark:border-white/10 border-black/10 w-12 text-center cursor-pointer hover:bg-white/5 transition-colors"
-                onClick={toggleSidebar}
-                title="Click to toggle sidebar"
-              >
-                #
-              </th>
-              {Object.keys(data[0]).map((key, i) => {
+              <th className="px-6 py-4 w-12 text-center border-r border-[var(--border-color)]">#</th>
+              {Object.keys(data[0]).map((key) => {
                 const isStatusColumn = key.toLowerCase().includes("status");
                 return (
-                <th key={i} className="p-0 border-r dark:border-white/10 border-black/10 group/header relative" style={{ minWidth: '150px' }}>
-                  <div className="flex flex-col h-full min-h-[80px]">
-                    <div className="flex items-center justify-between px-4 py-2 bg-black/5 dark:bg-white/5 border-b dark:border-white/10 border-black/10">
-                      <button 
-                        onClick={() => mergeWithNext(key)}
-                        className="opacity-0 group-hover/header:opacity-100 transition-opacity text-indigo-400 hover:text-indigo-300 text-[10px] p-1 rounded hover:bg-white/10"
-                        title="Merge with right"
-                      >
-                        🔗
-                      </button>
-                      <button 
-                        onClick={() => deleteColumn(key)}
-                        className="opacity-0 group-hover/header:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-1 rounded hover:bg-white/10"
-                        title="Delete Column"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    <div 
-                      className="px-4 py-3 h-full overflow-hidden flex-1 flex flex-col gap-2" 
-                      style={{ resize: 'horizontal', minWidth: '100%', maxWidth: '600px' }}
-                    >
-                      <div 
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => renameHeader(key, e.target.innerText)}
-                        className="focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)] rounded px-1 transition-all bg-transparent font-black tracking-widest leading-tight w-full break-words"
-                      >
-                        {key}
+                  <th key={key} className="p-0 border-r border-[var(--border-color)] group relative min-w-[160px]">
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-between px-4 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-color)]/20">
+                        <button onClick={() => mergeWithNext(key)} className="hover:text-[var(--primary-color)]">🔗</button>
+                        <button onClick={() => deleteColumn(key)} className="hover:text-[var(--danger)]">✕</button>
                       </div>
-                      {isStatusColumn && (
-                        <div className="flex items-center gap-1 mt-auto pt-2 border-t dark:border-white/10 border-black/10">
-                          <input 
-                            type="text" 
-                            placeholder="New Status" 
-                            value={newStatusLabel} 
-                            onChange={e => setNewStatusLabel(e.target.value)} 
-                            className="w-full text-[10px] p-1 rounded bg-black/10 dark:bg-white/10 dark:text-white text-black font-medium border-none outline-none focus:ring-1 focus:ring-[var(--accent-color)] focus:bg-black/20 dark:focus:bg-black/40 transition-colors"
-                          />
-                          <input 
-                            type="color" 
-                            value={newStatusColor} 
-                            onChange={e => setNewStatusColor(e.target.value)} 
-                            className="w-5 h-5 rounded cursor-pointer border-none bg-transparent flex-shrink-0"
-                            title="Status Color"
-                          />
-                          <button 
-                            onClick={handleAddStatus} 
-                            className="text-[10px] bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-2 py-1 rounded shadow transition-all flex-shrink-0"
-                          >
-                            +
-                          </button>
+                      <div className="px-4 pb-4">
+                        <div 
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => renameHeader(key, e.target.innerText)}
+                          className="focus:outline-none focus:text-[var(--primary-color)] font-bold uppercase tracking-widest break-words"
+                        >
+                          {key}
                         </div>
-                      )}
+                        {isStatusColumn && (
+                          <div className="flex items-center gap-1 mt-2">
+                            <input 
+                              type="text" 
+                              placeholder="Add Status" 
+                              value={newStatusLabel} 
+                              onChange={e => setNewStatusLabel(e.target.value)} 
+                              className="w-full text-[9px] p-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded outline-none"
+                            />
+                            <button 
+                              onClick={handleAddStatus} 
+                              className="bg-[var(--primary-color)] text-white p-1 rounded aspect-square flex items-center justify-center"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--accent-color)] opacity-0 group-hover/header:opacity-30 transition-opacity"></span>
-                </th>
-              )})}
-              <th className="px-6 py-4 text-center min-w-[80px]">Vector</th>
+                  </th>
+                )})}
+              <th className="px-6 py-4 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y dark:divide-white/5 divide-black/5">
+          <tbody className="divide-y divide-[var(--border-color)]">
             {data.map((row, i) => (
-              <tr key={i} className="border-b border-white/10 hover:bg-white/5 transition group">
-                <td 
-                  className="px-4 py-3 border-r border-black/5 dark:border-white/10 text-center font-bold dark:text-indigo-400/60 text-[var(--text-color)]/40 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 hover:text-[var(--accent-color)] transition-all"
-                  onClick={toggleSidebar}
-                  title="Click to toggle sidebar"
-                >
-                  {i + 1}
-                </td>
+              <tr key={i} className="hover:bg-[var(--bg-color)]/20 transition-colors group">
+                <td className="px-6 py-4 text-center font-bold text-[var(--text-secondary)] border-r border-[var(--border-color)]">{i + 1}</td>
                 {Object.keys(row).map((key, idx) => {
                   const isStatus = key.toLowerCase().includes("status");
                   return (
-                    <td key={idx} className="border-r border-white/10 p-4 relative align-top">
+                    <td key={idx} className="border-r border-[var(--border-color)] p-0 align-top">
                       {isStatus ? (
-                        <select 
-                          value={row[key] || "Pending"} 
-                          onChange={(e) => {
-                            const newData = [...data];
-                            newData[i] = { ...newData[i], [key]: e.target.value };
-                            updateData(newData, true);
-                          }}
-                          style={{
-                            backgroundColor: statusConfig[row[key]] ? `${statusConfig[row[key]]}26` : undefined, // 15% opacity wrapper
-                            color: statusConfig[row[key]] || undefined,
-                            borderColor: statusConfig[row[key]] ? `${statusConfig[row[key]]}80` : undefined, // 50% opacity border
-                          }}
-                          className="w-full bg-black/5 dark:bg-white/5 rounded-xl px-3 py-2 dark:text-white text-[var(--text-color)] border dark:border-white/10 border-black/10 focus:border-[var(--accent-color)] focus:outline-none appearance-none cursor-pointer font-black text-xs tracking-wider transition-all"
-                        >
-                          {Object.keys(statusConfig).map(statusName => (
-                            <option key={statusName} className="text-black bg-white" value={statusName}>{statusName}</option>
-                          ))}
-                          {!statusConfig[row[key]] && row[key] && (
-                            <option className="text-black bg-white" value={row[key]}>{row[key]}</option>
-                          )}
-                        </select>
+                        <div className="p-3">
+                          <select 
+                            value={row[key] || "Pending"} 
+                            onChange={(e) => {
+                              const newData = [...data];
+                              newData[i] = { ...newData[i], [key]: e.target.value };
+                              updateData(newData, true, { silent: true });
+                            }}
+                            style={{
+                              backgroundColor: statusConfig[row[key]] ? statusConfig[row[key]] : 'var(--bg-color)',
+                              color: 'white',
+                              borderColor: statusConfig[row[key]] ? statusConfig[row[key]] : 'var(--border-color)',
+                            }}
+                            className="w-full h-8 px-2 rounded font-bold text-[10px] uppercase appearance-none cursor-pointer border focus:outline-none transition-all shadow-sm shadow-black/20"
+                          >
+                            {Object.keys(statusConfig).map(statusName => (
+                              <option key={statusName} value={statusName}>{statusName}</option>
+                            ))}
+                            {!statusConfig[row[key]] && row[key] && (
+                              <option value={row[key]}>{row[key]}</option>
+                            )}
+                          </select>
+                        </div>
                       ) : (
                         <div 
                           contentEditable
@@ -398,7 +401,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                               updateData(newData, true);
                             }
                           }}
-                          className="w-full min-h-[1.5em] bg-transparent dark:text-white text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/20 rounded-xl px-2 transition-all break-words whitespace-pre-wrap font-medium"
+                          className="p-4 min-h-[50px] focus:outline-none focus:bg-[var(--bg-color)]/50 text-[var(--text-primary)] font-medium leading-relaxed"
                         >
                           {row[key]}
                         </div>
@@ -406,14 +409,25 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
                     </td>
                   );
                 })}
-                <td className="px-4 py-3 text-center opacity-0 group-hover:opacity-100 transition">
+                <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                   <button 
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingRowIndex(i);
+                    }}
+                    className="p-1 text-[var(--text-secondary)] hover:text-[var(--primary-color)] transition-all opacity-0 group-hover:opacity-100"
+                    title="Edit Row"
+                  >
+                    ✏️
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
                       const newData = data.filter((_, index) => index !== i);
                       updateData(newData, true);
+                      addToast("Row deleted", "success");
                     }}
-                    className="text-red-400 hover:text-red-300 transition p-2 rounded-lg hover:bg-red-500/20"
-                    title="Delete Row"
+                    className="p-1 text-[var(--text-secondary)] hover:text-[var(--danger)] transition-all opacity-0 group-hover:opacity-100"
                   >
                     🗑️
                   </button>
@@ -424,36 +438,184 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
         </table>
       </div>
 
-      <div className="p-6 dark:bg-white/5 bg-black/5 border-t dark:border-white/20 border-black/10 flex gap-4 items-center flex-wrap backdrop-blur-3xl">
-        <button
-          onClick={() => {
-            if (!data || data.length === 0) return;
-            const newRow = {};
-            Object.keys(data[0]).forEach(k => newRow[k] = "");
-            updateData([...data, newRow], true);
-          }}
-          className="bg-black/10 dark:bg-white/10 hover:bg-[var(--accent-color)] border dark:border-white/10 border-black/10 text-[var(--text-color)] hover:text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all inline-flex items-center gap-2 group"
-        >
-          <span className="group-hover:rotate-90 transition-transform">➕</span> Data Unit
-        </button>
-        <button
-          onClick={undo}
-          disabled={history.length === 0}
-          className={`px-6 py-3 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all inline-flex items-center gap-2 ${history.length === 0 ? "opacity-30 cursor-not-allowed dark:text-indigo-300 text-black/50 bg-black/5 border border-transparent" : "dark:bg-white/10 bg-black/10 hover:bg-red-500/20 text-[var(--text-color)] border dark:border-white/10 border-black/10"}`}
-        >
-          <span>↩️</span> Revert
-        </button>
-        <div className="flex-1"></div>
+      {/* Footer Actions */}
+      <div className="px-6 py-4 bg-[var(--bg-color)]/30 border-t border-[var(--border-color)] flex justify-between items-center">
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              if (!data || data.length === 0) return;
+              const newRow = {};
+              Object.keys(data[0]).forEach(k => newRow[k] = "");
+              updateData([...data, newRow], true);
+            }}
+            className="p-2 px-4 bg-[var(--bg-color)] hover:bg-[var(--border-color)] rounded text-[10px] font-bold uppercase transition-all"
+          >
+            ➕ Add Row
+          </button>
+          <button
+            onClick={undo}
+            disabled={history.length === 0}
+            className={`p-2 px-4 rounded text-[10px] font-bold uppercase transition-all ${history.length === 0 ? "opacity-30 cursor-not-allowed text-[var(--text-secondary)]" : "bg-[var(--bg-color)] hover:bg-[var(--border-color)]"}`}
+          >
+            ↩️ Undo
+          </button>
+        </div>
+        
         {onSave && (
           <button
             onClick={() => onSave(data)}
-            className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-10 py-3 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-green-600/20 transition-all hover:scale-105 active:scale-95 inline-flex items-center gap-2"
+            className="btn-primary py-2 px-8 shadow-none text-[10px]"
           >
-            <span>💾</span> Store System State
+            💾 Save Changes
           </button>
         )}
       </div>
     </div>
+    
+    {/* Table Management Modal */}
+    {isManageModalOpen && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="card-saas p-0 w-full max-w-[600px] max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col">
+          <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">⚙️ Table Management</h3>
+            <button onClick={() => setIsManageModalOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
+          </div>
+          
+          <div className="p-6 overflow-y-auto space-y-8 flex-1">
+            {/* Column Reordering */}
+            <section className="space-y-4">
+              <h4 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest border-l-4 border-[var(--primary-color)] pl-3">Column Architecture</h4>
+              <div className="space-y-2">
+                {Object.keys(data[0] || {}).map((key, i, arr) => (
+                  <div key={key} className="flex items-center justify-between p-3 bg-[var(--bg-color)]/50 rounded-lg border border-[var(--border-color)] group">
+                    <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-tight">{key}</span>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        disabled={i === 0}
+                        onClick={() => moveColumn(key, -1)}
+                        className={`p-1.5 rounded hover:bg-[var(--bg-color)] transition-all ${i === 0 ? 'opacity-20' : ''}`}
+                      >🔼</button>
+                      <button 
+                        disabled={i === arr.length - 1}
+                        onClick={() => moveColumn(key, 1)}
+                        className={`p-1.5 rounded hover:bg-[var(--bg-color)] transition-all ${i === arr.length - 1 ? 'opacity-20' : ''}`}
+                      >🔽</button>
+                      <button 
+                        onClick={() => { if(confirm(`Delete ${key}?`)) deleteColumn(key); }}
+                        className="p-1.5 rounded hover:bg-red-500/10 text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                      >✕</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button 
+                onClick={addColumn}
+                className="w-full py-3 border-2 border-dashed border-[var(--border-color)] rounded-xl text-[10px] font-bold text-[var(--text-secondary)] uppercase hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] transition-all mt-4"
+              >
+                + Forge New Column
+              </button>
+            </section>
+
+            {/* Status Factory */}
+            <section className="space-y-4">
+              <h4 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest border-l-4 border-[var(--warning)] pl-3">Status Factory (Dropdowns)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Object.entries(statusConfig).map(([label, color]) => (
+                  <div key={label} className="flex items-center gap-3 p-2 bg-[var(--bg-color)]/20 rounded-lg border border-[var(--border-color)] group">
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }}></div>
+                    <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase flex-1">{label}</span>
+                    <button onClick={() => handleDeleteStatus(label)} className="text-red-500 opacity-0 group-hover:opacity-100 transition-all">✕</button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <input 
+                  type="text" 
+                  placeholder="Status Label" 
+                  value={newStatusLabel}
+                  onChange={(e) => setNewStatusLabel(e.target.value)}
+                  className="input-saas flex-1 h-9 text-xs"
+                />
+                <input 
+                  type="color" 
+                  value={newStatusColor}
+                  onChange={(e) => setNewStatusColor(e.target.value)}
+                  className="w-10 h-9 p-0 bg-transparent border-none cursor-pointer"
+                />
+                <button 
+                  onClick={handleAddStatus}
+                  className="btn-primary h-9 px-4 text-xs whitespace-nowrap"
+                >Add Status</button>
+              </div>
+            </section>
+          </div>
+          
+          <div className="p-4 bg-[var(--bg-color)]/50 border-t border-[var(--border-color)] flex justify-end">
+            <button onClick={() => setIsManageModalOpen(false)} className="btn-primary py-2 px-10">Close Terminal</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Row Edit Modal */}
+    {editingRowIndex !== null && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="card-saas p-0 w-full max-w-[500px] max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col">
+          <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">✏️ Edit Row #{editingRowIndex + 1}</h3>
+            <button onClick={() => setEditingRowIndex(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
+          </div>
+          
+          <div className="p-6 overflow-y-auto space-y-5 flex-1 grayscale-0">
+             {Object.entries(data[editingRowIndex]).map(([key, value]) => {
+                const isStatus = key.toLowerCase().includes("status");
+                return (
+                  <div key={key} className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">{key}</label>
+                    {isStatus ? (
+                      <div className="relative">
+                        <select 
+                          value={value || "Pending"}
+                          onChange={(e) => {
+                             const newData = [...data];
+                             newData[editingRowIndex] = { ...newData[editingRowIndex], [key]: e.target.value };
+                             setData(newData);
+                          }}
+                          style={{
+                            backgroundColor: statusConfig[value] ? statusConfig[value] : 'var(--bg-color)',
+                            color: 'white'
+                          }}
+                          className="w-full h-11 px-4 rounded-xl font-bold text-xs uppercase appearance-none cursor-pointer border border-[var(--border-color)] shadow-inner"
+                        >
+                          {Object.keys(statusConfig).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/50 text-xs">▼</div>
+                      </div>
+                    ) : (
+                      <textarea 
+                        value={value}
+                        onChange={(e) => {
+                          const newData = [...data];
+                          newData[editingRowIndex] = { ...newData[editingRowIndex], [key]: e.target.value };
+                          setData(newData);
+                        }}
+                        className="input-saas w-full min-h-[80px] py-3 text-xs leading-relaxed"
+                      />
+                    )}
+                  </div>
+                );
+             })}
+          </div>
+          
+          <div className="p-4 bg-[var(--bg-color)]/50 border-t border-[var(--border-color)] flex justify-end gap-3">
+            <button onClick={() => setEditingRowIndex(null)} className="px-6 py-2 text-xs font-bold text-[var(--text-secondary)] uppercase">Cancel</button>
+            <button onClick={() => { updateData(data, true); setEditingRowIndex(null); }} className="btn-primary px-10">Confirm Sync</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

@@ -1,55 +1,70 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import BookLayout from "../components/BookLayout";
 import { useToast } from "../utils/ToastContext";
 
-function ProjectDetail({ project }) {
+function ProjectDetail({ toggleSidebar, isSidebarCollapsed }) {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [notes, setNotes] = useState("");
+  const [project, setProject] = useState(null);
+  const [activePage, setActivePage] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useToast();
 
   useEffect(() => {
-    if (project && project.notes !== notes) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setNotes(project.notes || "");
-    }
-  }, [project, notes]);
+    fetch(`http://localhost:5000/projects/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Project not found");
+        return res.json();
+      })
+      .then((data) => {
+        setProject(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        addToast("Failed to load project details", "error");
+        navigate("/projects");
+      });
+  }, [id, navigate, addToast]);
 
-  const handleSave = async () => {
-    await fetch(`http://localhost:5000/projects/${project.id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ notes }),
-    });
-
-    addToast("Notes saved successfully", "success");
+  const handleUpdateProject = (updatedProject) => {
+    setProject(updatedProject);
   };
 
+  const handleDeleteProject = async () => {
+    if (!window.confirm("Are you sure you want to delete this project? Data will be lost permanently.")) return;
+    try {
+      await fetch(`http://localhost:5000/projects/${project.id}`, { method: "DELETE" });
+      addToast("Project deleted", "info");
+      navigate("/projects");
+    } catch (err) {
+      console.error(err);
+      addToast("Failed to delete project", "error");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[var(--primary-color)] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!project) return null;
+
   return (
-    <div className="p-8 text-white">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="mb-8 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl transition-all duration-300 group"
-      >
-        <span className="group-hover:-translate-x-1 transition-transform">⬅️</span>
-        <span className="text-xs font-black uppercase tracking-widest">Return to Dashboard</span>
-      </button>
-      <h2 className="text-xl font-bold mb-2">Notes</h2>
-
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        className="w-full border p-2 rounded min-h-[200px]"
-      />
-
-      <button
-        onClick={handleSave}
-        className="mt-2 bg-green-500 text-white px-4 py-2 rounded"
-      >
-        Save Notes
-      </button>
-    </div>
+    <BookLayout
+      project={project}
+      activePage={activePage}
+      setActivePage={setActivePage}
+      goBack={() => navigate("/projects")}
+      onDelete={handleDeleteProject}
+      onUpdateProject={handleUpdateProject}
+      toggleSidebar={toggleSidebar}
+      isSidebarCollapsed={isSidebarCollapsed}
+    />
   );
 }
 

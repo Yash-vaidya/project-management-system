@@ -60,52 +60,66 @@ function ProjectDashboard({ project }) {
 
 
   const renderCircle = (metrics, label, subLabel) => (
-    <div className="flex flex-col items-center">
-      <div className="relative w-48 h-48 mb-6">
+    <div className="card-saas p-8 flex flex-col items-center justify-center transition-all hover:translate-y-[-4px]">
+      <div className="relative w-40 h-40 mb-6 font-bold">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
           <circle
-            cx="80" cy="80" r="74"
-            className="fill-none dark:stroke-white/5 stroke-black/5 stroke-[12]"
+            cx="80" cy="80" r="72"
+            className="fill-none stroke-[var(--border-color)] stroke-[8]"
           />
           <circle
-            cx="80" cy="80" r="74"
-            className="fill-none stroke-[var(--accent-color)] stroke-[12] transition-all duration-1000 ease-out"
-            strokeDasharray="465"
-            strokeDashoffset={465 - (465 * metrics.percent) / 100}
+            cx="80" cy="80" r="72"
+            className="fill-none stroke-[var(--primary-color)] stroke-[8] transition-all duration-1000 ease-out"
+            strokeDasharray="452.39"
+            strokeDashoffset={452.39 - (452.39 * metrics.percent) / 100}
             strokeLinecap="round"
+            style={{ filter: "drop-shadow(0 0 4px rgba(85, 110, 230, 0.4))" }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-black dark:text-white text-[var(--text-color)]">{metrics.percent}%</span>
-          <span className="text-[10px] font-black dark:text-indigo-300/60 text-[var(--text-color)] uppercase tracking-widest mt-1">{subLabel}</span>
+          <span className="text-3xl font-black text-[var(--text-primary)]">{metrics.percent}%</span>
+          <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-1">{subLabel}</span>
         </div>
       </div>
-      <p className="text-[12px] font-black dark:text-white/60 text-[var(--text-color)]/80 uppercase tracking-[0.3em]">{label}</p>
+      <p className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest">{label}</p>
     </div>
   );
 
   return (
-    <div className="mt-12 p-8 dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-[40px] backdrop-blur-3xl shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-700">
-      <div className="flex items-center justify-between mb-10">
+    <div className="space-y-8 animate-fadeIn">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h3 className="text-2xl font-black dark:text-white text-[var(--text-color)] tracking-tighter uppercase">Project Analytics</h3>
-          <p className="dark:text-indigo-300/40 text-[var(--text-color)]/80 text-[10px] font-black uppercase tracking-[0.4em] mt-1">Real-time execution metrics</p>
+          <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Project Node Telemetry</h3>
+          <p className="text-sm text-[var(--text-secondary)] font-medium">Real-time execution metrics and synchronization status.</p>
         </div>
-        <div className="px-4 py-2 bg-[var(--accent-color)]/20 border border-[var(--accent-color)]/30 rounded-full dark:text-indigo-300 text-[var(--accent-color)] text-[10px] font-black uppercase tracking-widest uppercase">
-          Node Active
+        <div className="px-4 py-1.5 bg-[var(--primary-color)]/10 text-[var(--primary-color)] text-[10px] font-bold rounded-full tracking-widest uppercase border border-[var(--primary-color)]/20">
+          📡 Channel Active
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-        {renderCircle(sod, "SOD", "Daily Progress"  )}
-        {renderCircle(mom, "MOM", "Meeting Sync")}
-        {renderCircle(task, "TASK", "Task Lifecycle")}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {renderCircle(task, "TASK PROGRESS", "Completion")}
+        {renderCircle(sod, "SOD PROGRESS", "Execution")}
+        {renderCircle(mom, "MOM TRACKER", "Sync Rate")}
       </div>
 
-      <div className="mt-10 pt-6 border-t dark:border-white/5 border-black/5 flex items-center gap-4 dark:text-indigo-300/30 text-[var(--text-color)]/20">
-        <span className="text-[9px] font-black uppercase tracking-[0.3em]">Telemetry Phase 4.2</span>
-        <div className="flex-1 h-[1px] dark:bg-white/5 bg-black/5"></div>
-        <span className="text-[9px] font-black uppercase tracking-[0.3em] font-black">{new Date().toLocaleDateString()}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card-saas p-6">
+          <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2">Total Tasks</p>
+          <p className="text-2xl font-black text-[var(--text-primary)]">{task.counts.total}</p>
+        </div>
+        <div className="card-saas p-6">
+          <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2">In Progress</p>
+          <p className="text-2xl font-black text-[var(--warning)]">{task.counts.progress + sod.counts.progress}</p>
+        </div>
+        <div className="card-saas p-6">
+          <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2">Completed</p>
+          <p className="text-2xl font-black text-[var(--success)]">{task.counts.completed + sod.counts.completed}</p>
+        </div>
+        <div className="card-saas p-6">
+          <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2">On Hold</p>
+          <p className="text-2xl font-black text-[var(--danger)]">{task.counts.hold + sod.counts.hold}</p>
+        </div>
       </div>
     </div>
   );

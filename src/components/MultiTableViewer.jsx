@@ -44,17 +44,17 @@ function MultiTableViewer({ tablesData, title = "Table", onSave, toggleSidebar, 
   }, [tablesData]);
 
   // ─── Persist all tables upstream ────────────────────────────────────────────
-  const saveAll = (updatedTables, silent = false) => {
+  const saveAll = (updatedTables, options = {}) => {
     setTables(updatedTables);
     if (onSave) {
-      onSave(updatedTables);
+      onSave(updatedTables, options);
     }
   };
 
   // ─── Single-table data update (from TaskSheetViewer) ────────────────────────
-  const handleTableSave = (index, newData) => {
+  const handleTableSave = (index, newData, options = {}) => {
     const updated = tables.map((t, i) => (i === index ? { ...t, data: newData } : t));
-    saveAll(updated);
+    saveAll(updated, options);
   };
 
   // ─── Rename ─────────────────────────────────────────────────────────────────
@@ -89,124 +89,85 @@ function MultiTableViewer({ tablesData, title = "Table", onSave, toggleSidebar, 
   const activeTable = tables[activeIndex];
 
   return (
-    <div className="flex flex-col gap-5 mt-4">
-
-      {/* ── Header row ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-black dark:text-white text-[var(--text-color)] uppercase tracking-tight flex items-center gap-2">
-          <span>{title === "MOM" ? "📝" : "🗓️"}</span>
-          {title}
-          <span className="text-[var(--accent-color)] opacity-50 text-[10px] font-black uppercase tracking-widest">
-            {tables.length} Table{tables.length !== 1 ? "s" : ""}
-          </span>
-        </h2>
-      </div>
-
-      {/* ── Tab Bar ─────────────────────────────────────────────────────────── */}
-      {tables.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar flex-wrap">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Tab Navigation & Management */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 custom-scrollbar shrink">
           {tables.map((table, index) => {
             const isActive = activeIndex === index;
             const isConfirming = confirmDeleteIndex === index;
 
+            if (isConfirming) {
+              return (
+                <div key={index} className="flex items-center gap-2 bg-[var(--danger)]/10 border border-[var(--danger)]/30 p-2 px-3 rounded-lg animate-fadeIn">
+                  <span className="text-[9px] font-bold text-[var(--danger)] uppercase">Delete?</span>
+                  <button onClick={() => deleteTable(index)} className="text-[10px] font-bold text-white bg-[var(--danger)] px-2 py-1 rounded">Yes</button>
+                  <button onClick={() => setConfirmDeleteIndex(null)} className="text-[10px] font-bold text-[var(--text-secondary)]">No</button>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={index}
-                className={`group/tab flex items-center gap-2 rounded-2xl border transition-all duration-200 shrink-0 ${
-                  isConfirming
-                    ? "bg-red-500/20 border-red-500/40 px-3 py-2"
-                    : isActive
-                    ? "bg-[var(--accent-color)] border-[var(--accent-color)] shadow-lg px-3 py-2"
-                    : "dark:bg-white/5 bg-black/5 dark:border-white/10 border-black/10 hover:dark:bg-white/10 hover:bg-black/10 px-3 py-2 cursor-pointer"
+                className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg border transition-all cursor-pointer whitespace-nowrap ${
+                  isActive 
+                    ? "bg-[var(--primary-color)] text-white border-[var(--primary-color)] shadow-lg shadow-[#556EE6]/20" 
+                    : "bg-[var(--card-bg)] text-[var(--text-secondary)] border-[var(--border-color)] hover:bg-[var(--bg-color)]"
                 }`}
+                onClick={() => { setActiveIndex(index); setConfirmDeleteIndex(null); }}
               >
-                {isConfirming ? (
-                  /* ── Inline delete confirmation ─────────────────────── */
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
-                      Delete &quot;{table.name}&quot;?
-                    </span>
-                    <button
-                      onClick={() => deleteTable(index)}
-                      className="text-[9px] font-black uppercase bg-red-500 text-white px-2.5 py-1 rounded-lg hover:bg-red-400 transition"
-                    >
-                      Yes, Delete
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteIndex(null)}
-                      className="text-[9px] font-black uppercase dark:bg-white/20 bg-black/10 dark:text-white text-[var(--text-color)] px-2.5 py-1 rounded-lg hover:dark:bg-white/30 hover:bg-black/20 transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {/* Tab click area */}
-                    <button
-                      onClick={() => { setActiveIndex(index); setConfirmDeleteIndex(null); }}
-                      className="flex items-center gap-1.5 focus:outline-none"
-                    >
-                      <span className="text-[11px]">{title === "MOM" ? "📋" : "📅"}</span>
-                      {/* Editable name */}
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        title="Click to rename"
-                        onBlur={(e) => handleRenameTable(index, e.target.innerText)}
-                        onClick={(e) => { if (isActive) e.stopPropagation(); }}
-                        className={`text-[11px] font-black uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-white/50 rounded px-0.5 min-w-[40px] max-w-[140px] truncate ${
-                          isActive ? "text-white" : "dark:text-indigo-200/80 text-[var(--text-color)]/80"
-                        }`}
-                      >
-                        {table.name}
-                      </span>
-                    </button>
-
-                    {/* Delete × */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteIndex(index); }}
-                      className={`text-sm leading-none p-0.5 rounded-full transition opacity-0 group-hover/tab:opacity-100 ${
-                        isActive
-                          ? "text-white/60 hover:text-white hover:bg-white/20"
-                          : "dark:text-white/30 text-black/30 hover:text-red-400 hover:bg-red-400/10"
-                      }`}
-                      title={`Delete ${table.name}`}
-                    >
-                      ×
-                    </button>
-                  </>
+                <span className="text-xs">{title === "MOM" ? "📋" : "📅"}</span>
+                <span
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleRenameTable(index, e.target.innerText)}
+                  onClick={(e) => isActive && e.stopPropagation()}
+                  className="text-[10px] font-bold uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-white/50 rounded px-0.5"
+                >
+                  {table.name}
+                </span>
+                {!isConfirming && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteIndex(index); }}
+                    className={`ml-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-[var(--danger)] ${isActive ? 'text-white/60 hover:text-white' : ''}`}
+                  >
+                    ✕
+                  </button>
                 )}
               </div>
             );
           })}
-
-          {/* ── Add Table button ─────────────────────────────────────────── */}
-          <button
-            onClick={addTable}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl border dark:border-white/10 border-black/10 dark:bg-white/5 bg-black/5 hover:bg-[var(--accent-color)] hover:text-white hover:border-[var(--accent-color)] text-[var(--accent-color)] font-black uppercase tracking-widest text-[10px] transition-all"
-          >
-            ➕ New Table
-          </button>
         </div>
-      )}
 
-      {/* ── Empty state ──────────────────────────────────────────────────────── */}
+        <button
+          onClick={addTable}
+          className="btn-primary h-10 px-4 text-[10px] whitespace-nowrap shadow-none"
+        >
+          ➕ New {title} Node
+        </button>
+      </div>
+
+      {/* Empty State */}
       {tables.length === 0 && (
-        <div className="border dark:border-white/20 border-black/10 rounded-3xl p-14 flex flex-col items-center justify-center dark:bg-white/5 bg-black/5 border-dashed">
-          <div className="text-5xl mb-4">{title === "MOM" ? "📝" : "🗓️"}</div>
-          <p className="dark:text-indigo-200/70 text-[var(--text-color)]/60 mb-8 font-bold text-center italic text-sm">
-            No {title} tables yet. Initialize one to get started.
+        <div className="card-saas p-20 flex flex-col items-center justify-center text-center">
+          <div className="w-20 h-20 bg-[var(--primary-color)]/10 rounded-full flex items-center justify-center text-4xl mb-6">
+            {title === "MOM" ? "📝" : "🗓️"}
+          </div>
+          <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">No {title} Data Detected</h3>
+          <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-8 font-medium">
+            Initialize a new data vector to begin tracking {title} parameters for this project node.
           </p>
           <button
             onClick={addTable}
-            className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+            className="btn-primary px-10"
           >
-            <span className="text-xl">⚡</span> Initialize {title} Table
+            Create Initial Table
           </button>
         </div>
       )}
 
-      {/* ── Active table content ─────────────────────────────────────────────── */}
+      {/* Active Table Viewer */}
       {activeTable && (
         <TaskSheetViewer
           taskSheet={JSON.stringify(activeTable.data)}

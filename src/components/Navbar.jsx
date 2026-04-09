@@ -6,75 +6,57 @@ function Navbar({ onLogout, isCollapsed, onToggle }) {
   const navItems = [
     { to: "/", label: "Dashboard", icon: "📊" },
     { to: "/projects", label: "Library", icon: "📚" },
-    { to: "/add-project", label: "Record Entry", icon: "➕" },
   ];
 
   return (
-    <div className={`${isCollapsed ? "w-20" : "w-64"} h-screen dark:bg-white/5 bg-[var(--nav-bg)] backdrop-blur-3xl dark:text-white text-[var(--text-color)] flex flex-col border-r dark:border-white/10 border-black/10 shadow-[20px_0_50px_rgba(0,0,0,0.3)] z-50 transition-all duration-300 relative`}>
+    <div className={`${isCollapsed ? "w-20" : "w-64"} h-screen bg-[#1A1D2E] text-[#ABB4D2] flex flex-col transition-all duration-300 relative z-50 shadow-lg`}>
       
       {/* Toggle Button */}
       <button 
         onClick={onToggle}
-        className="absolute -right-3 top-10 w-6 h-6 bg-[var(--accent-color)] rounded-full flex items-center justify-center border border-white/20 shadow-lg z-50 hover:bg-[var(--accent-hover)] transition-colors"
+        className="absolute -right-3 top-8 w-6 h-6 bg-[#556EE6] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform z-[60]"
       >
-        <span className={`text-[10px] text-white transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`}>◀</span>
+        <span className="text-[10px]">{isCollapsed ? "→" : "←"}</span>
       </button>
 
       {/* Brand Header */}
-      <div className={`p-8 pb-12 border-b dark:border-white/5 border-black/5 dark:bg-transparent bg-[var(--nav-bg)] ${isCollapsed ? "flex justify-center px-0 text-center" : ""}`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-[var(--accent-color)] rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0 overflow-hidden p-2">
-            <img src={logo} alt="Project Logo" className="w-full h-full object-contain filter invert dark:invert-0" />
-          </div>
-          {!isCollapsed && <h1 className="text-lg font-black tracking-tighter uppercase whitespace-nowrap dark:text-white text-[var(--text-color)]">Nexus <span className="dark:text-indigo-400 text-green-700">Hub</span></h1>}
+      <div className={`p-6 pb-10 ${isCollapsed ? "flex justify-center" : ""}`}>
+        <div className="flex items-center gap-3">
+          <img src="/favicon.svg" alt="Trackbord Logo" className="w-8 h-8 object-contain shrink-0 drop-shadow-[0_0_8px_rgba(85,110,230,0.5)]" />
+          {!isCollapsed && <h1 className="text-lg font-black tracking-tight uppercase text-white">Trackbord</h1>}
         </div>
-        {!isCollapsed && <p className="text-[10px] font-bold dark:text-indigo-300/40 text-black/40 uppercase tracking-[0.3em] ml-1">Management Suite</p>}
+        {!isCollapsed && <p className="text-[10px] font-medium text-[#74788D] uppercase tracking-widest mt-1 ml-1">Admin Dashboard</p>}
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-4 py-8 space-y-2">
+      <nav className="flex-1 px-4 space-y-1">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             title={isCollapsed ? item.label : ""}
             className={({ isActive }) =>
-              `flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-5"} py-4 rounded-2xl font-bold tracking-tight text-sm transition-all duration-300 group ${
+              `flex items-center ${isCollapsed ? "justify-center" : "gap-4 px-4"} py-3 rounded-lg font-medium text-sm transition-all duration-200 group ${
                 isActive 
-                  ? "bg-[var(--accent-color)] shadow-xl shadow-green-600/20 text-white" 
-                  : "dark:text-indigo-200/60 text-[var(--text-color)]/60 dark:hover:bg-white/5 hover:bg-black/5 dark:hover:text-white hover:text-[var(--text-color)]"
+                  ? "bg-[#556EE6]/10 text-white" 
+                  : "hover:bg-white/5 hover:text-white"
               }`
             }
           >
-            <span className="text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform">{item.icon}</span>
-            {!isCollapsed && <span>{item.label}</span>}
+            <span className={`text-lg transition-transform group-hover:scale-110 ${isCollapsed ? "" : ""}`}>{item.icon}</span>
+            {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
           </NavLink>
         ))}
       </nav>
-
-      {/* Bottom Profile / Logout */}
-      <div className="p-4 border-t border-white/5">
-        <div className="bg-white/5 rounded-2xl p-4 flex flex-col gap-4 overflow-hidden">
-          <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/20 flex items-center justify-center font-black text-indigo-400 text-xs shrink-0">
-              YV
-            </div>
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-black truncate uppercase tracking-tighter">Yashvaidya</p>
-                <p className="text-[9px] font-bold text-indigo-400/60 uppercase tracking-widest">Administrator</p>
-              </div>
-            )}
-          </div>
-          
-          <button 
-            onClick={onLogout}
-            title={isCollapsed ? "Exit Session" : ""}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-red-400 font-black tracking-[0.2em] uppercase transition-all active:scale-95 ${isCollapsed ? "px-0 text-[12px]" : "text-[10px]"}`}
-          >
-            {isCollapsed ? "🔚" : "🔚 EXIT SESSION"}
-          </button>
-        </div>
+      {/* Logout / User Info */}
+      <div className="p-4 border-t border-white/5 bg-black/10">
+        <button 
+          onClick={onLogout}
+          className={`w-full flex items-center ${isCollapsed ? "justify-center" : "gap-4 px-4"} py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 transition-all`}
+        >
+          <span className="text-lg">🚪</span>
+          {!isCollapsed && <span>Logout</span>}
+        </button>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import AddProject from "./pages/AddProject";
 import Navbar from "./components/Navbar";
+import TopNavbar from "./components/TopNavbar";
 import ProjectDetails from "./pages/ProjectDetails";
 import { ToastProvider } from "./utils/ToastContext";
 
@@ -17,9 +18,18 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "dark";
+  });
+
   useEffect(() => {
-    document.documentElement.className = "dark";
-  }, []);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const handleScroll = (e) => {
@@ -59,8 +69,6 @@ function App() {
   return (
     <ToastProvider>
     <div className={`min-h-screen transition-colors duration-300`} style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
-      {/* Theme Toggle Removed as requested */}
-
       <Router>
         <Routes>
           <Route 
@@ -71,16 +79,19 @@ function App() {
             path="/*"
             element={
               isLoggedIn ? (
-                <div className="flex h-screen overflow-hidden">
+                <div className="flex h-screen overflow-hidden bg-[var(--bg-color)]">
                   <Navbar onLogout={() => handleLogin(false)} isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
-                  <div id="main-viewport" className={`flex-1 h-full overflow-y-auto bg-transparent transition-all duration-300 ${isSidebarCollapsed ? "ml-0" : ""}`}>
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/projects" element={<Projects toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />} />
-                      <Route path="/add-project" element={<AddProject />} />
-                      <Route path="/project/:id" element={<ProjectDetails />} />
-                      <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
+                  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                    <TopNavbar theme={theme} toggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />
+                    <div id="main-viewport" className="flex-1 overflow-y-auto p-6 custom-scrollbar transition-all duration-300">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/projects" element={<Projects toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />} />
+                        <Route path="/add-project" element={<AddProject />} />
+                        <Route path="/project/:id" element={<ProjectDetails />} />
+                        <Route path="*" element={<Navigate to="/" />} />
+                      </Routes>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -95,10 +106,10 @@ function App() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-red-600 hover:bg-red-500 text-black w-14 h-14 rounded-full shadow-[0_0_30px_rgba(255,0,0,0.3)] flex items-center justify-center transition-all animate-in fade-in zoom-in duration-300 hover:scale-110 active:scale-95 z-[9999] border-2 border-black/10"
+          className="fixed bottom-8 right-8 bg-[var(--primary-color)] text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all animate-in fade-in zoom-in duration-300 hover:scale-110 active:scale-95 z-[9999] border-none cursor-pointer"
           title="Return to Top"
         >
-          <span className="text-2xl font-black">↑</span>
+          <span className="text-xl">↑</span>
         </button>
       )}
     </div>

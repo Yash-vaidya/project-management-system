@@ -1,167 +1,304 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { calculateMetrics } from "../utils/metrics";
+import { useToast } from "../utils/ToastContext";
 
 function Home() {
   const [projects, setProjects] = useState([]);
+  const [editingProject, setEditingProject] = useState(null);
+  const navigate = useNavigate();
+  const { addToast } = useToast();
 
-  useEffect(() => {
+  const fetchProjects = () => {
     fetch("http://localhost:5000/projects")
       .then((res) => res.json())
       .then((data) => setProjects(data));
+  };
+
+  useEffect(() => {
+    fetchProjects();
   }, []);
 
-  // Compute metrics dynamically
-  const totalProjects = projects.length;
-
-  const getMetrics = (dataStr) => {
-    if (!dataStr || typeof dataStr !== "string") return { total: 0, completed: 0 };
-    try {
-      const parsed = JSON.parse(dataStr);
-      if (!Array.isArray(parsed) || parsed.length === 0) return { total: 0, completed: 0 };
-      
-      let data = [];
-      if (parsed[0] && typeof parsed[0] === 'object' && !Array.isArray(parsed[0]) && 'data' in parsed[0]) {
-        parsed.forEach(table => {
-          if (Array.isArray(table.data)) data.push(...table.data);
-        });
-      } else if (Array.isArray(parsed[0])) {
-        parsed.forEach(table => {
-          if (Array.isArray(table)) data.push(...table);
-        });
-      } else {
-        data = parsed;
+  const deleteProject = async (id, name) => {
+    if (window.confirm(`Are you sure you want to delete project "${name}"? This action cannot be undone.`)) {
+      try {
+        await fetch(`http://localhost:5000/projects/${id}`, { method: "DELETE" });
+        addToast(`Project "${name}" deleted`, "success");
+        fetchProjects();
+      } catch (e) {
+        addToast("Failed to delete project", "error");
       }
-      
-      let total = data.length;
-      let completed = 0;
-      data.forEach((row) => {
-        const statusKey = Object.keys(row).find((k) => k.toLowerCase().includes("status"));
-        if (statusKey && row[statusKey]) {
-          const val = row[statusKey].toString().trim().toLowerCase();
-          if (val.startsWith("complet") || val.startsWith("compet") || ["done", "success", "finished", "ok"].includes(val)) {
-            completed++;
-          }
-        }
-      });
-      return { total, completed };
-    } catch {
-      return { total: 0, completed: 0 };
     }
   };
 
+  const updateProject = async (e) => {
+    e.preventDefault();
+    try {
+      await fetch(`http://localhost:5000/projects/${editingProject.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editingProject.name, type: editingProject.type }),
+      });
+      addToast("Project updated successfully", "success");
+      setEditingProject(null);
+      fetchProjects();
+    } catch (e) {
+      addToast("Failed to update project", "error");
+    }
+  };
+
+  // Compute metrics dynamically
+  const totalProjects = projects.length;
   let totalTasks = 0;
   let completedTasks = 0;
 
   projects.forEach((p) => {
-    const metrics = getMetrics(p.sod);
+    const metrics = calculateMetrics(p.taskSheet);
     totalTasks += metrics.total;
     completedTasks += metrics.completed;
   });
 
   const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
-  // Dynamic Chart Data mapping from SOD table
-  const chartData = projects.map(p => {
-    const metrics = getMetrics(p.sod);
+  const typeMap = {
+    mern: "MERN Stack",
+    dotnet: ".NET Development",
+    website: "Websites"
+  };
+
+  const chartData = projects.slice(0, 10).map(p => {
+    const metrics = calculateMetrics(p.taskSheet);
     return { 
       id: p.id,
-      name: p.name, 
+      name: p.name,
+      type: p.type, 
       progress: metrics.total === 0 ? 0 : Math.round((metrics.completed / metrics.total) * 100)
     };
   });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto flex flex-col items-stretch h-full overflow-y-auto transition-colors duration-300">
-      <div className="mb-10">
-        <h1 className="text-5xl font-extrabold capitalize drop-shadow-lg mb-2 dark:text-white text-[var(--text-color)] uppercase tracking-tighter">Global Overview</h1>
-        <p className="dark:text-indigo-200 text-black/40 text-lg font-medium">Your entire project ecosystem at a glance.</p>
+    <div className="max-w-[1600px] mx-auto animate-fadeIn p-4">
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">Central Terminal</h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Authorized Administrator: Yash Vaidya</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => navigate("/add-project")} className="btn-primary flex items-center gap-2 shadow-lg shadow-[#556EE6]/30">
+            <span>➕</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Init New Node</span>
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {/* Total Projects */}
-        <div className="bg-black/5 dark:bg-white/5 border dark:border-white/10 border-black/5 backdrop-blur-xl p-6 rounded-3xl shadow-xl flex flex-col justify-center transition-all hover:bg-[var(--accent-color)]/5 group">
-          <p className="dark:text-indigo-300/60 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-2">Total Projects</p>
-          <div className="flex items-end gap-3">
-            <span className="text-5xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md group-hover:text-[var(--accent-color)] transition-colors uppercase">{totalProjects}</span>
-            <span className="dark:text-indigo-300/30 text-[var(--text-color)]/30 font-black text-[10px] mb-1 uppercase tracking-widest">Active Units</span>
+      {/* Analytics KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
+          <div className="w-12 h-12 bg-[#556EE6]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📁</div>
+          <div>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Active Vectors</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">{totalProjects}</h3>
           </div>
         </div>
-
-        {/* Total Tasks */}
-        <div className="bg-black/5 dark:bg-white/5 border dark:border-white/10 border-black/5 backdrop-blur-xl p-6 rounded-3xl shadow-xl flex flex-col justify-center transition-all hover:bg-[var(--accent-color)]/5 group">
-          <p className="dark:text-indigo-300/60 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-2">Global Tasks</p>
-          <div className="flex items-end gap-3">
-            <span className="text-5xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md group-hover:text-[var(--accent-color)] transition-colors uppercase">{totalTasks}</span>
-            <span className="dark:text-indigo-300/30 text-[var(--text-color)]/30 font-black text-[10px] mb-1 uppercase tracking-widest">In Network</span>
+        <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
+          <div className="w-12 h-12 bg-[var(--primary-color)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📊</div>
+          <div>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Data Units</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">{totalTasks}</h3>
           </div>
         </div>
+        <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
+          <div className="w-12 h-12 bg-[var(--success)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📈</div>
+          <div>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Global Progress</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">{progressPercent}%</h3>
+          </div>
+        </div>
+        <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
+          <div className="w-12 h-12 bg-[var(--warning)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">⚡</div>
+          <div>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Sync Health</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">98.4%</h3>
+          </div>
+        </div>
+      </div>
 
-        {/* Global Progress */}
-        <div className="bg-black/5 dark:bg-white/5 border dark:border-white/10 border-black/5 backdrop-blur-xl p-6 rounded-3xl shadow-xl flex flex-col justify-center col-span-1 md:col-span-2 transition-all hover:bg-[var(--accent-color)]/5">
-          <div className="flex justify-between items-end mb-4">
-            <div>
-              <p className="dark:text-indigo-300/60 text-[var(--text-color)]/60 text-[10px] font-black uppercase tracking-widest mb-1">Overall System Execution (SOD)</p>
-              <p className="text-4xl font-black dark:text-white text-[var(--text-color)] drop-shadow-md">{progressPercent}%</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Task Management Table */}
+        <div className="lg:col-span-12 space-y-8">
+          <div className="card-saas overflow-hidden">
+            <div className="px-8 py-5 border-b border-[var(--border-color)] bg-[var(--bg-color)]/30 flex justify-between items-center">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Recent Operations Console</h3>
             </div>
-            <p className="dark:text-indigo-300/40 text-[var(--text-color)]/40 text-[9px] font-black text-right uppercase tracking-widest">{completedTasks} / {totalTasks} Nodes Synchronized</p>
-          </div>
-          <div className="w-full bg-slate-300/30 dark:bg-white/5 h-2.5 rounded-full overflow-hidden border border-white/5">
-            <div 
-              className="bg-[var(--accent-color)] h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(34,197,94,0.4)]" 
-              style={{ width: `${progressPercent}%` }}
-            ></div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest bg-[var(--bg-color)]/50 border-b border-[var(--border-color)]">
+                    <th className="px-8 py-4">Resource Node</th>
+                    <th className="px-8 py-4">Sector Type</th>
+                    <th className="px-8 py-4">Integrity</th>
+                    <th className="px-8 py-4">Status</th>
+                    <th className="px-8 py-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-color)]">
+                  {chartData.map((proj, idx) => (
+                    <tr key={idx} className="hover:bg-[var(--bg-color)]/20 transition-all group cursor-default">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-8 h-8 bg-[var(--primary-color)] text-white rounded font-black text-[10px] flex items-center justify-center shadow-md">
+                            {proj.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors">{proj.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-tight">{typeMap[proj.type] || 'MERN Stack'}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="w-40 flex items-center gap-4">
+                          <div className="flex-1 h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-1000 ${proj.progress > 80 ? 'bg-[var(--success)]' : 'bg-[var(--primary-color)]'}`}
+                              style={{ width: `${proj.progress}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-[10px] font-black text-[var(--text-primary)]">{proj.progress}%</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2">
+                           <div className={`w-2 h-2 rounded-full ${proj.progress > 80 ? 'bg-[var(--success)] animate-pulse' : 'bg-[var(--warning)]'}`}></div>
+                           <span className={`text-[9px] font-black uppercase tracking-widest ${proj.progress > 80 ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>
+                             {proj.progress > 80 ? 'Optimal' : 'Active'}
+                           </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link 
+                          to={`/project/${proj.id}`} 
+                          className="p-2 px-4 bg-[var(--bg-color)] hover:bg-[var(--primary-color)] hover:text-white rounded text-[9px] font-black uppercase tracking-widest transition-all"
+                        >
+                          Access
+                        </Link>
+                        <button 
+                          onClick={() => setEditingProject({ id: proj.id, name: proj.name, type: proj.type })}
+                          className="p-2 bg-[var(--bg-color)] hover:bg-[var(--primary-color)] hover:text-white rounded text-[10px] transition-all"
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          onClick={() => deleteProject(proj.id, proj.name)}
+                          className="p-2 bg-[var(--bg-color)] hover:bg-red-500/10 hover:text-red-500 rounded text-[10px] transition-all"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalProjects === 0 && (
+              <div className="p-16 text-center">
+                <p className="text-[var(--text-secondary)] text-sm font-medium italic opacity-50 tracking-wide">No project nodes detected in the local grid.</p>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Activity Timeline
+        <div className="lg:col-span-4">
+          <div className="card-saas p-8 h-full">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--primary-color)] mb-10 border-b border-[var(--border-color)] pb-5">Activity Matrix</h3>
+            <div className="relative space-y-10 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[var(--border-color)]">
+              <div className="relative pl-10 animate-fadeIn">
+                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--primary-color)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md transform hover:scale-125 transition-transform cursor-help"></div>
+                <div>
+                  <p className="text-[11px] font-bold text-[var(--text-primary)]">System Handshake</p>
+                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Secure administrator authentication successful. Node cluster status: ONLINE.</p>
+                  <p className="text-[8px] text-[var(--primary-color)] font-black uppercase mt-3 tracking-widest">Just Now</p>
+                </div>
+              </div>
+              
+              <div className="relative pl-10 animate-fadeIn">
+                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--success)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md transform hover:scale-125 transition-transform cursor-help"></div>
+                <div>
+                  <p className="text-[11px] font-bold text-[var(--text-primary)]">MOM Vector Update</p>
+                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Project metadata refined for global sync optimization.</p>
+                  <p className="text-[8px] text-[var(--text-secondary)] font-black uppercase mt-3 tracking-widest">2h Ago</p>
+                </div>
+              </div>
+
+              <div className="relative pl-10 animate-fadeIn">
+                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--warning)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md transform hover:scale-125 transition-transform cursor-help"></div>
+                <div>
+                  <p className="text-[11px] font-bold text-[var(--text-primary)]">Security Protocol</p>
+                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Unauthorized access prevented at firewall level for port 5000.</p>
+                  <p className="text-[8px] text-[var(--text-secondary)] font-black uppercase mt-3 tracking-widest">5h Ago</p>
+                </div>
+              </div>
+              
+              <div className="relative pl-10 opacity-40 hover:opacity-100 transition-opacity">
+                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--text-secondary)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md"></div>
+                <div>
+                  <p className="text-[11px] font-bold text-[var(--text-primary)]">Archive Maintenance</p>
+                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Legacy CSS variables and unused JSON fields scrubbed from environment.</p>
+                  <p className="text-[8px] text-[var(--text-secondary)] font-black uppercase mt-3 tracking-widest">Yesterday</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> */}
       </div>
 
-      <h2 className="text-xl font-black mb-6 tracking-widest dark:text-white/80 text-slate-700 uppercase">📈 Terminal Execution Matrix (SOD)</h2>
-      
-      {/* 📊 Circle Progress Matrix (SOD) */}
-      <div className="dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-[40px] p-10 backdrop-blur-3xl shadow-2xl mb-12">
-        <div className="flex justify-between mb-8 border-b dark:border-white/5 border-black/5 pb-4">
-          <span className="text-[10px] dark:text-indigo-300/40 text-[var(--text-color)]/60 tracking-[0.4em] uppercase font-black">Execution Vectors: SOD Node Matrix</span>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12">
-          {chartData.map((proj, idx) => (
-            <Link to={`/projects?id=${proj.id}`} key={idx} className="flex flex-col items-center group transition-transform hover:scale-110 duration-500 cursor-pointer no-underline">
-               <div className="relative w-36 h-36 mb-6">
-                 <svg className="w-full h-full -rotate-90">
-                   <circle
-                     cx="72" cy="72" r="66"
-                     className="fill-none dark:stroke-white/5 stroke-black/5 stroke-[10]"
-                   />
-                   <circle
-                     cx="72" cy="72" r="66"
-                     className="fill-none stroke-[var(--accent-color)] stroke-[10] transition-all duration-1000 ease-out"
-                     strokeDasharray="414.7"
-                     strokeDashoffset={414.7 - (414.7 * proj.progress) / 100}
-                     strokeLinecap="round"
-                   />
-                 </svg>
-                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                   <span className="text-3xl font-black dark:text-white text-[var(--text-color)]">{proj.progress}%</span>
-                   <span className="text-[9px] font-black dark:text-indigo-300/30 text-[var(--text-color)]/30 uppercase tracking-widest mt-1">Vector</span>
-                 </div>
-               </div>
-               <h3 className="text-[11px] font-black dark:text-white text-[var(--text-color)]/80 uppercase tracking-tighter text-center max-w-[120px] truncate group-hover:text-[var(--accent-color)] transition-colors">
-                 {proj.name}
-               </h3>
-            </Link>
-          ))}
-        </div>
-        
-        <div className="text-center mt-12 text-[9px] dark:text-indigo-300/30 text-[var(--text-color)]/20 tracking-[0.6em] uppercase font-black border-t dark:border-white/5 border-black/5 pt-6">
-          System Core Telemetry (Baseline 2.1)
-        </div>
-      </div>
-      
-      {totalProjects === 0 && (
-        <div className="mt-8 text-center p-8 bg-white/5 border border-white/10 rounded-2xl">
-          <p className="text-indigo-200 text-xl mb-4">Your database is completely fresh, so the chart above is currently showing fake example data.</p>
-          <Link to="/add-project" className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">
-            Start Your First Project
-          </Link>
+      {/* Project Edit Modal */}
+      {editingProject && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-8 bg-[var(--bg-color)]/50 border-b border-[var(--border-color)] flex justify-between items-center">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[var(--text-primary)]">Sync Project Identity</h3>
+              <button onClick={() => setEditingProject(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
+            </div>
+            
+            <form onSubmit={updateProject} className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Resource Name</label>
+                <input 
+                  type="text" 
+                  value={editingProject.name}
+                  onChange={(e) => setEditingProject({...editingProject, name: e.target.value})}
+                  className="input-saas w-full h-12"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Technology Sector</label>
+                <select 
+                  value={editingProject.type}
+                  onChange={(e) => setEditingProject({...editingProject, type: e.target.value})}
+                  className="input-saas w-full h-12 bg-[var(--card-bg)] cursor-pointer"
+                >
+                  <option value="mern">MERN Stack</option>
+                  <option value="dotnet">.NET Development</option>
+                  <option value="website">Websites</option>
+                </select>
+              </div>
+              
+              <div className="pt-6 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingProject(null)}
+                  className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-all"
+                >
+                  Abort
+                </button>
+                <button type="submit" className="btn-primary shadow-xl shadow-[#556EE6]/20">
+                  <span className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em]">Commit Update</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
