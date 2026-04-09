@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logo from "../assets/logo.svg";
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -27,8 +28,8 @@ function Login({ onLogin }) {
       <div className="w-full max-w-md dark:bg-white/10 bg-white/80 backdrop-blur-2xl border dark:border-white/20 border-black/10 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 transform scale-100 transition-all duration-500 animate-in fade-in zoom-in-95">
         
         <div className="text-center mb-10">
-          <div className="inline-block p-4 bg-[var(--accent-color)]/20 rounded-3xl mb-4 border border-[var(--accent-color)]/20">
-            <span className="text-4xl text-white">🏛️</span>
+          <div className="inline-block p-6 bg-[var(--accent-color)]/20 rounded-3xl mb-4 border border-[var(--accent-color)]/20 w-24 h-24">
+            <img src={logo} alt="Project Logo" className="w-full h-full object-contain filter invert dark:invert-0" />
           </div>
           <h1 className="text-3xl font-black dark:text-white text-[var(--text-color)] tracking-tight uppercase mb-2">Internal Portal</h1>
           <p className="dark:text-indigo-200/60 text-black/40 text-sm font-medium tracking-wide font-black uppercase tracking-[0.2em] scale-y-110">Access Matrix</p>

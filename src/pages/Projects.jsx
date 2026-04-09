@@ -11,6 +11,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [activePage, setActivePage] = useState(null);
   const [pageMap, setPageMap] = useState({ mern: 0, dotnet: 0, website: 0 });
+  const [draggedOverShelf, setDraggedOverShelf] = useState(null);
   const { addToast } = useToast();
 
   const ITEMS_PER_PAGE = 6;
@@ -57,6 +58,46 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
     } catch (err) {
       console.error(err);
       addToast("Failed to delete project", "error");
+    }
+  };
+
+  const handleDragOver = (e, catId) => {
+    e.preventDefault();
+    setDraggedOverShelf(catId);
+  };
+
+  const handleDragLeave = () => {
+    setDraggedOverShelf(null);
+  };
+
+  const handleDrop = async (e, catId) => {
+    e.preventDefault();
+    setDraggedOverShelf(null);
+    const projectId = e.dataTransfer.getData("projectId");
+    if (!projectId) return;
+
+    const project = projects.find(p => p.id.toString() === projectId.toString());
+    if (!project || project.type === catId) return;
+
+    try {
+      // Optimistically update UI
+      const updatedProject = { ...project, type: catId };
+      setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
+      
+      const response = await fetch(`http://localhost:5000/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: catId })
+      });
+
+      if (!response.ok) throw new Error("Failed to update project category");
+      
+      addToast(`Project moved to ${categories.find(c => c.id === catId).name}`, "success");
+    } catch (err) {
+      console.error(err);
+      // Rollback not really possible with just setProjects(projects) if state already changed, 
+      // but fetch data again or just show toast.
+      addToast("Failed to move project", "error");
     }
   };
 
@@ -120,7 +161,12 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                 </div>
 
                 {/* The Shelf Container */}
-                <div className="relative pt-6 pb-2">
+                <div 
+                  className={`relative pt-6 pb-2 transition-all duration-300 rounded-xl ${draggedOverShelf === cat.id ? 'bg-[var(--accent-color)]/5 ring-2 ring-[var(--accent-color)]/20 shadow-2xl scale-[1.01]' : ''}`}
+                  onDragOver={(e) => handleDragOver(e, cat.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, cat.id)}
+                >
                   {/* The Books */}
                   <div className="flex flex-wrap items-end gap-3 md:gap-5 px-10 min-h-[14rem] md:min-h-[16rem]">
                     {paginatedProjects.length > 0 ? (

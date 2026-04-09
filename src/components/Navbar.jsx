@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 
+import logo from "../assets/logo.svg";
+
 function Navbar({ onLogout, isCollapsed, onToggle }) {
   const navItems = [
     { to: "/", label: "Dashboard", icon: "📊" },
@@ -21,8 +23,8 @@ function Navbar({ onLogout, isCollapsed, onToggle }) {
       {/* Brand Header */}
       <div className={`p-8 pb-12 border-b dark:border-white/5 border-black/5 dark:bg-transparent bg-[var(--nav-bg)] ${isCollapsed ? "flex justify-center px-0 text-center" : ""}`}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-[var(--accent-color)] rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
-            <span className="text-xl">🏛️</span>
+          <div className="w-10 h-10 bg-[var(--accent-color)] rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0 overflow-hidden p-2">
+            <img src={logo} alt="Project Logo" className="w-full h-full object-contain filter invert dark:invert-0" />
           </div>
           {!isCollapsed && <h1 className="text-lg font-black tracking-tighter uppercase whitespace-nowrap dark:text-white text-[var(--text-color)]">Nexus <span className="dark:text-indigo-400 text-green-700">Hub</span></h1>}
         </div>

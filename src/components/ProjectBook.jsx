@@ -30,7 +30,12 @@ function ProjectBook({ project, onSelect, onDelete }) {
       {/* Book Container */}
       <div 
         onClick={() => onSelect(project)}
-        className="relative w-14 h-48 md:w-16 md:h-56 cursor-pointer transition-all duration-500 ease-out 
+        draggable="true"
+        onDragStart={(e) => {
+          e.dataTransfer.setData("projectId", project.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        className="relative w-14 h-48 md:w-16 md:h-56 cursor-grab active:cursor-grabbing transition-all duration-500 ease-out 
                    transform origin-bottom hover:-translate-y-4 hover:rotate-2 group-hover:z-20"
       >
         {/* Book Spine */}
