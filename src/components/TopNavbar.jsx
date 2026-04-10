@@ -38,63 +38,25 @@ function TopNavbar({ theme, toggleTheme }) {
     return parts[0][0].toUpperCase();
   };
 
-  const [showNotifications, setShowNotifications] = useState(false);
-  const notifications = [
-    { id: 1, text: "System Baseline Initialized", type: "info", time: "Just Now" },
-    { id: 2, text: "New Project Node Added", type: "success", time: "2h ago" },
-    { id: 3, text: "MOM Data Sync Successful", type: "warning", time: "5h ago" },
-  ];
+   return (
+     <>
+       <header className="h-16 bg-[var(--card-bg)] border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-300">
+         
+         <div className="flex items-center gap-4">
+           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block">QuillPro Network Node #0/1</h2>
+         </div>
 
-  return (
-    <>
-      <header className="h-16 bg-[var(--card-bg)] border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-300">
-        
-        <div className="flex items-center gap-4">
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block">QuillPro Network Node #0/1</h2>
-        </div>
+         <div className="flex items-center gap-6">
+           {/* Theme Toggle */}
+           <button 
+             onClick={toggleTheme}
+             className="p-2 bg-[var(--bg-color)] rounded-lg text-lg hover:bg-[var(--primary-color)]/10 transition-all border border-[var(--border-color)]"
+             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+           >
+             {theme === 'dark' ? "☀️" : "🌙"}
+           </button>
 
-        <div className="flex items-center gap-6">
-          {/* Theme Toggle */}
-          <button 
-            onClick={toggleTheme}
-            className="p-2 bg-[var(--bg-color)] rounded-lg text-lg hover:bg-[var(--primary-color)]/10 transition-all border border-[var(--border-color)]"
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-          >
-            {theme === 'dark' ? "☀️" : "🌙"}
-          </button>
-
-          {/* Notifications */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 bg-[var(--bg-color)] rounded-lg text-lg hover:bg-[var(--primary-color)]/10 transition-all border border-[var(--border-color)] relative"
-              title="Notifications"
-            >
-              🔔
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--danger)] rounded-full border-2 border-[var(--card-bg)]"></span>
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 mt-3 w-72 card-saas p-0 overflow-hidden shadow-2xl animate-in slide-in-from-top-2 duration-200">
-                <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-color)]/50">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)]">System Alerts</p>
-                </div>
-                <div className="divide-y divide-[var(--border-color)] max-h-80 overflow-y-auto">
-                    {notifications.map(n => (
-                      <div key={n.id} className="p-4 hover:bg-[var(--bg-color)]/50 transition-colors cursor-pointer">
-                        <p className="text-[11px] font-bold text-[var(--text-primary)] mb-1">{n.text}</p>
-                        <p className="text-[9px] text-[var(--text-secondary)] font-medium uppercase tracking-tighter">{n.time}</p>
-                      </div>
-                    ))}
-                </div>
-                <div className="p-3 bg-[var(--bg-color)]/30 border-t border-[var(--border-color)] text-center">
-                  <button className="text-[9px] font-black uppercase tracking-widest text-[var(--primary-color)] hover:underline">View All Logs</button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* User Profile */}
+           {/* User Profile */}
           <div 
             className="flex items-center gap-3 pl-4 border-l border-[var(--border-color)] cursor-pointer group hover:opacity-80 transition-opacity"
             onClick={() => setShowProfileModal(true)}
