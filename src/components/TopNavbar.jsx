@@ -42,9 +42,9 @@ function TopNavbar({ theme, toggleTheme }) {
      <>
        <header className="h-16 bg-[var(--card-bg)] border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-300">
          
-         <div className="flex items-center gap-4">
-           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block">QuillPro Network Node #0/1</h2>
-         </div>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block">the title project traking system this only</h2>
+          </div>
 
          <div className="flex items-center gap-6">
            {/* Theme Toggle */}
