@@ -23,7 +23,7 @@ function Home() {
     if (window.confirm(`Are you sure you want to delete project "${name}"? This action cannot be undone.`)) {
       try {
         await fetch(`http://localhost:5000/projects/${id}`, { method: "DELETE" });
-        addToast(`Project "${name}" deleted`, "success");
+        addToast(`Project "${name}" deleted successfully`, "success");
         fetchProjects();
       } catch (e) {
         addToast("Failed to delete project", "error");
@@ -47,7 +47,7 @@ function Home() {
     }
   };
 
-  // Compute metrics dynamically
+  // Calculate metrics
   const totalProjects = projects.length;
   let totalTasks = 0;
   let completedTasks = 0;
@@ -80,65 +80,65 @@ function Home() {
     <div className="max-w-[1600px] mx-auto animate-fadeIn p-4">
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">Central Terminal</h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Authorized Administrator: Yash Vaidya</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">Dashboard</h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Welcome: Yash Vaidya</p>
         </div>
         <div className="flex gap-3">
           <button onClick={() => navigate("/add-project")} className="btn-primary flex items-center gap-2 shadow-lg shadow-[#556EE6]/30">
             <span>➕</span>
-            <span className="text-[10px] font-black uppercase tracking-widest">Init New Node</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Add New Project</span>
           </button>
         </div>
       </div>
 
-      {/* Analytics KPI Cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
         <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
           <div className="w-12 h-12 bg-[#556EE6]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📁</div>
           <div>
-            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Active Vectors</p>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Total Projects</p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">{totalProjects}</h3>
           </div>
         </div>
         <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
           <div className="w-12 h-12 bg-[var(--primary-color)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📊</div>
           <div>
-            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Data Units</p>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Total Tasks</p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">{totalTasks}</h3>
           </div>
         </div>
         <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
           <div className="w-12 h-12 bg-[var(--success)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📈</div>
           <div>
-            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Global Progress</p>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Overall Progress</p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">{progressPercent}%</h3>
           </div>
         </div>
         <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
           <div className="w-12 h-12 bg-[var(--warning)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">⚡</div>
           <div>
-            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Sync Health</p>
-            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">98.4%</h3>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Status</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">Active</h3>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Task Management Table */}
+        {/* Projects Table */}
         <div className="lg:col-span-12 space-y-8">
           <div className="card-saas overflow-hidden">
             <div className="px-8 py-5 border-b border-[var(--border-color)] bg-[var(--bg-color)]/30 flex justify-between items-center">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Recent Operations Console</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">All Projects</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest bg-[var(--bg-color)]/50 border-b border-[var(--border-color)]">
-                    <th className="px-8 py-4">Resource Node</th>
-                    <th className="px-8 py-4">Sector Type</th>
-                    <th className="px-8 py-4">Integrity</th>
+                    <th className="px-8 py-4">Project Name</th>
+                    <th className="px-8 py-4">Type</th>
+                    <th className="px-8 py-4">Progress</th>
                     <th className="px-8 py-4">Status</th>
-                    <th className="px-8 py-4 text-right">Action</th>
+                    <th className="px-8 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-color)]">
@@ -170,7 +170,7 @@ function Home() {
                         <div className="flex items-center gap-2">
                            <div className={`w-2 h-2 rounded-full ${proj.progress > 80 ? 'bg-[var(--success)] animate-pulse' : 'bg-[var(--warning)]'}`}></div>
                            <span className={`text-[9px] font-black uppercase tracking-widest ${proj.progress > 80 ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>
-                             {proj.progress > 80 ? 'Optimal' : 'Active'}
+                             {proj.progress > 80 ? 'Completed' : 'In Progress'}
                            </span>
                         </div>
                       </td>
@@ -179,7 +179,7 @@ function Home() {
                           to={`/project/${proj.id}`} 
                           className="p-2 px-4 bg-[var(--bg-color)] hover:bg-[var(--primary-color)] hover:text-white rounded text-[9px] font-black uppercase tracking-widest transition-all"
                         >
-                          Access
+                          View
                         </Link>
                         <button 
                           onClick={() => setEditingProject({ id: proj.id, name: proj.name, type: proj.type })}
@@ -201,69 +201,25 @@ function Home() {
             </div>
             {totalProjects === 0 && (
               <div className="p-16 text-center">
-                <p className="text-[var(--text-secondary)] text-sm font-medium italic opacity-50 tracking-wide">No project nodes detected in the local grid.</p>
+                <p className="text-[var(--text-secondary)] text-sm font-medium italic opacity-50 tracking-wide">No projects found. Click "Add New Project" to create one.</p>
               </div>
             )}
           </div>
         </div>
-
-        {/* Activity Timeline
-        <div className="lg:col-span-4">
-          <div className="card-saas p-8 h-full">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--primary-color)] mb-10 border-b border-[var(--border-color)] pb-5">Activity Matrix</h3>
-            <div className="relative space-y-10 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[var(--border-color)]">
-              <div className="relative pl-10 animate-fadeIn">
-                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--primary-color)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md transform hover:scale-125 transition-transform cursor-help"></div>
-                <div>
-                  <p className="text-[11px] font-bold text-[var(--text-primary)]">System Handshake</p>
-                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Secure administrator authentication successful. Node cluster status: ONLINE.</p>
-                  <p className="text-[8px] text-[var(--primary-color)] font-black uppercase mt-3 tracking-widest">Just Now</p>
-                </div>
-              </div>
-              
-              <div className="relative pl-10 animate-fadeIn">
-                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--success)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md transform hover:scale-125 transition-transform cursor-help"></div>
-                <div>
-                  <p className="text-[11px] font-bold text-[var(--text-primary)]">MOM Vector Update</p>
-                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Project metadata refined for global sync optimization.</p>
-                  <p className="text-[8px] text-[var(--text-secondary)] font-black uppercase mt-3 tracking-widest">2h Ago</p>
-                </div>
-              </div>
-
-              <div className="relative pl-10 animate-fadeIn">
-                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--warning)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md transform hover:scale-125 transition-transform cursor-help"></div>
-                <div>
-                  <p className="text-[11px] font-bold text-[var(--text-primary)]">Security Protocol</p>
-                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Unauthorized access prevented at firewall level for port 5000.</p>
-                  <p className="text-[8px] text-[var(--text-secondary)] font-black uppercase mt-3 tracking-widest">5h Ago</p>
-                </div>
-              </div>
-              
-              <div className="relative pl-10 opacity-40 hover:opacity-100 transition-opacity">
-                <div className="absolute left-0 top-1 w-[24px] h-[24px] bg-[var(--text-secondary)] rounded-full flex items-center justify-center border-4 border-[var(--card-bg)] shadow-md"></div>
-                <div>
-                  <p className="text-[11px] font-bold text-[var(--text-primary)]">Archive Maintenance</p>
-                  <p className="text-[9px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">Legacy CSS variables and unused JSON fields scrubbed from environment.</p>
-                  <p className="text-[8px] text-[var(--text-secondary)] font-black uppercase mt-3 tracking-widest">Yesterday</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> */}
       </div>
 
-      {/* Project Edit Modal */}
+      {/* Edit Project Modal */}
       {editingProject && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="p-8 bg-[var(--bg-color)]/50 border-b border-[var(--border-color)] flex justify-between items-center">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[var(--text-primary)]">Sync Project Identity</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[var(--text-primary)]">Edit Project</h3>
               <button onClick={() => setEditingProject(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
             </div>
             
             <form onSubmit={updateProject} className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Resource Name</label>
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Project Name</label>
                 <input 
                   type="text" 
                   value={editingProject.name}
@@ -273,7 +229,7 @@ function Home() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Technology Sector</label>
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Project Type</label>
                 <select 
                   value={editingProject.type}
                   onChange={(e) => setEditingProject({...editingProject, type: e.target.value})}
@@ -291,10 +247,10 @@ function Home() {
                   onClick={() => setEditingProject(null)}
                   className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-all"
                 >
-                  Abort
+                  Cancel
                 </button>
                 <button type="submit" className="btn-primary shadow-xl shadow-[#556EE6]/20">
-                  <span className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em]">Commit Update</span>
+                  <span className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em]">Save Changes</span>
                 </button>
               </div>
             </form>

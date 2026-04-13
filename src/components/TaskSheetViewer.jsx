@@ -24,7 +24,6 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       "Pending": "#f59e0b",
       "In Progress": "#3b82f6",
       "Completed": "#10b981",
-      "Done": "#10b981",
       "Hold": "#ef4444"
     };
   });
@@ -138,7 +137,23 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       try {
         const parsed = excelToJson(importText);
         if (parsed.length) {
-          updateData(parsed, true);
+          // Normalize status: "Done" or "Complit" -> "Completed"
+          const normalized = parsed.map(row => {
+            const newRow = { ...row };
+            Object.keys(newRow).forEach(key => {
+              if (key.toLowerCase().includes("status")) {
+                const val = newRow[key];
+                if (val && typeof val === "string") {
+                  const lower = val.toLowerCase().trim();
+                  if (lower === "done" || lower === "complit") {
+                    newRow[key] = "Completed";
+                  }
+                }
+              }
+            });
+            return newRow;
+          });
+          updateData(normalized, true);
           setIsImporting(false);
           setImportText("");
           setError("");
@@ -175,10 +190,26 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
     try {
       const parsed = typeof taskSheet === 'string' ? JSON.parse(taskSheet) : taskSheet;
       if (Array.isArray(parsed)) {
+        // Normalize status values: "Done" or "Complit" -> "Completed"
+        const normalized = parsed.map(row => {
+          const newRow = { ...row };
+          Object.keys(newRow).forEach(key => {
+            if (key.toLowerCase().includes("status")) {
+              const val = newRow[key];
+              if (val && typeof val === "string") {
+                const lower = val.toLowerCase().trim();
+                if (lower === "done" || lower === "complit") {
+                  newRow[key] = "Completed";
+                }
+              }
+            }
+          });
+          return newRow;
+        });
         // Only clear history if the incoming data is significantly different from current local data
         // This prevents the history crash when auto-saving.
-        if (JSON.stringify(data) !== JSON.stringify(parsed)) {
-          setData(parsed);
+        if (JSON.stringify(data) !== JSON.stringify(normalized)) {
+          setData(normalized);
           setHistory([]);
           setError("");
         }

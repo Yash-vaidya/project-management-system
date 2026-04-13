@@ -27,10 +27,10 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
   }, []);
 
   const deleteProject = async (id, name) => {
-    if (window.confirm(`Are you sure you want to delete project "${name}"? This action cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to delete project "${name}"?`)) {
       try {
         await fetch(`http://localhost:5000/projects/${id}`, { method: "DELETE" });
-        addToast(`Project "${name}" deleted`, "success");
+        addToast(`Project "${name}" deleted successfully`, "success");
         fetchProjects();
       } catch (e) {
         addToast("Failed to delete project", "error");
@@ -94,8 +94,6 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
       addToast(`Project moved to ${categories.find(c => c.id === catId).name}`, "success");
     } catch (err) {
       console.error(err);
-      // Rollback not really possible with just setProjects(projects) if state already changed, 
-      // but fetch data again or just show toast.
       addToast("Failed to move project", "error");
     }
   };
@@ -110,8 +108,8 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
     <div className="max-w-[1600px] mx-auto animate-fadeIn">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">Resource Library</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Archive of {projects.length} Total Projects</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">All Projects</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Total: {projects.length} projects</p>
         </div>
       </div>
 
@@ -144,7 +142,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                       <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-widest">
                         {cat.name}
                       </h2>
-                      <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter mt-0.5">{catProjects.length} Records found</p>
+                      <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter mt-0.5">{catProjects.length} projects</p>
                     </div>
                   </div>
                 </div>
@@ -166,7 +164,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                                {cat.icon}
                              </div>
                              <div className="flex flex-col items-end gap-2">
-                               <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase bg-[var(--bg-color)] px-2 py-1 rounded tracking-tighter shadow-sm">NODE #{proj.id.toString().padStart(3, '0')}</span>
+                               <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase bg-[var(--bg-color)] px-2 py-1 rounded tracking-tighter shadow-sm">ID: {proj.id}</span>
                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                  <button 
                                    onClick={(e) => {
@@ -174,7 +172,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                                      setEditingProject({ id: proj.id, name: proj.name, type: proj.type });
                                    }}
                                    className="p-1 px-2 bg-[var(--bg-color)] hover:bg-[var(--primary-color)] hover:text-white rounded text-[10px] transition-all"
-                                   title="Edit Node"
+                                   title="Edit"
                                  >
                                    ✏️
                                  </button>
@@ -184,15 +182,15 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                                      deleteProject(proj.id, proj.name);
                                    }}
                                    className="p-1 px-2 bg-[var(--bg-color)] hover:bg-red-500/10 hover:text-red-500 rounded text-[10px] transition-all"
-                                   title="Delete Node"
+                                   title="Delete"
                                  >
                                    🗑️
                                  </button>
                                </div>
                              </div>
                            </div>
-                          <h3 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors line-clamp-1">{proj.name}</h3>
-                          <p className="text-[10px] text-[var(--text-secondary)] font-medium mt-1 uppercase tracking-tight">{categories.find(c => c.id === proj.type)?.name || 'MERN Stack'}</p>
+                           <h3 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors line-clamp-1">{proj.name}</h3>
+                           <p className="text-[10px] text-[var(--text-secondary)] font-medium mt-1 uppercase tracking-tight">{categories.find(c => c.id === proj.type)?.name || 'MERN Stack'}</p>
                         </div>
                         
                         <div className="px-5 py-4 border-t border-[var(--border-color)] bg-[var(--bg-color)]/20">
@@ -211,7 +209,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                     ))
                   ) : (
                     <div className="col-span-full py-12 text-center border-2 border-dashed border-[var(--border-color)] rounded-xl">
-                      <p className="text-[var(--text-secondary)] text-sm font-medium italic">Shelf currently empty in this sector.</p>
+                      <p className="text-[var(--text-secondary)] text-sm font-medium italic">No projects in this category yet.</p>
                     </div>
                   )}
                 </div>
@@ -244,13 +242,13 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Update Resource Meta</h3>
+              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Edit Project</h3>
               <button onClick={() => setEditingProject(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
             </div>
             
             <form onSubmit={updateProject} className="p-6 space-y-5">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Resource Alias</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Name</label>
                 <input 
                   type="text" 
                   value={editingProject.name}
@@ -260,7 +258,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Sector Assignment</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Type</label>
                 <select 
                   value={editingProject.type}
                   onChange={(e) => setEditingProject({...editingProject, type: e.target.value})}
@@ -278,10 +276,10 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                   onClick={() => setEditingProject(null)}
                   className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-colors"
                 >
-                  Abort
+                  Cancel
                 </button>
                 <button type="submit" className="btn-primary">
-                  Commit Sync
+                  Save
                 </button>
               </div>
             </form>

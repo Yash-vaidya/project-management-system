@@ -12,12 +12,11 @@ function Login({ onLogin }) {
     setIsLoading(true);
     setError("");
 
-    // Professional validation with specific credentials requested
     setTimeout(() => {
       if (username === "Yashvaidya" && password === "Pass@123") {
         onLogin();
       } else {
-        setError("Invalid credentials. Please try again.");
+        setError("Invalid username or password.");
         setIsLoading(false);
       }
     }, 800);
@@ -31,30 +30,30 @@ function Login({ onLogin }) {
           <div className="inline-block p-6 bg-[var(--accent-color)]/20 rounded-3xl mb-4 border border-[var(--accent-color)]/20 w-24 h-24">
             <img src={logo} alt="Project Logo" className="w-full h-full object-contain filter invert dark:invert-0" />
           </div>
-          <h1 className="text-3xl font-black dark:text-white text-[var(--text-color)] tracking-tight uppercase mb-2">Internal Portal</h1>
-          <p className="dark:text-indigo-200/60 text-black/40 text-sm font-medium tracking-wide font-black uppercase tracking-[0.2em] scale-y-110">Access Matrix</p>
+          <h1 className="text-3xl font-black dark:text-white text-[var(--text-color)] tracking-tight uppercase mb-2">Login</h1>
+          <p className="dark:text-indigo-200/60 text-black/40 text-sm font-medium tracking-wide font-black uppercase tracking-[0.2em] scale-y-110">Project Tracking System</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-[10px] font-black dark:text-indigo-300 text-black/40 uppercase tracking-widest mb-2 ml-1">Username Identification</label>
+            <label className="block text-[10px] font-black dark:text-indigo-300 text-black/40 uppercase tracking-widest mb-2 ml-1">Username</label>
             <input
               type="text"
               required
               className="w-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-2xl px-5 py-4 dark:text-white text-[var(--text-color)] placeholder-black/20 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/50 transition-all font-bold"
-              placeholder="Yashvaidya"
+              placeholder="Enter username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-[10px] font-black dark:text-indigo-300 text-black/40 uppercase tracking-widest mb-2 ml-1">Secure Vector Pass</label>
+            <label className="block text-[10px] font-black dark:text-indigo-300 text-black/40 uppercase tracking-widest mb-2 ml-1">Password</label>
             <input
               type="password"
               required
               className="w-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-2xl px-5 py-4 dark:text-white text-[var(--text-color)] placeholder-black/20 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/50 transition-all font-bold"
-              placeholder="••••••••"
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -77,12 +76,12 @@ function Login({ onLogin }) {
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:0.4s]"></span>
               </span>
-            ) : "AUTHENTICATE SYSTEM"}
+            ) : "Login"}
           </button>
         </form>
 
         <div className="mt-10 pt-6 border-t dark:border-white/5 border-black/5 text-center">
-          <p className="dark:text-white/20 text-black/20 text-[10px] font-bold tracking-widest uppercase">System version 4.0.2 - Protected Access</p>
+          <p className="dark:text-white/20 text-black/20 text-[10px] font-bold tracking-widest uppercase">Version 1.0</p>
         </div>
       </div>
     </div>

@@ -89,18 +89,18 @@ function ProjectDashboard({ project }) {
     <div className="space-y-8 animate-fadeIn">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Project Node Telemetry</h3>
-          <p className="text-sm text-[var(--text-secondary)] font-medium">Real-time execution metrics and synchronization status.</p>
+          <h3 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Project Analytics</h3>
+          <p className="text-sm text-[var(--text-secondary)] font-medium">View project progress and statistics.</p>
         </div>
         <div className="px-4 py-1.5 bg-[var(--primary-color)]/10 text-[var(--primary-color)] text-[10px] font-bold rounded-full tracking-widest uppercase border border-[var(--primary-color)]/20">
-          📡 Channel Active
+          📊 Active
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {renderCircle(task, "TASK PROGRESS", "Completion")}
-        {renderCircle(sod, "SOD PROGRESS", "Execution")}
-        {renderCircle(mom, "MOM TRACKER", "Sync Rate")}
+        {renderCircle(task, "TASKS", "Completed")}
+        {renderCircle(sod, "SOD", "Completed")}
+        {renderCircle(mom, "MOM", "Meetings")}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

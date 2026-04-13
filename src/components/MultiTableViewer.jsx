@@ -17,7 +17,27 @@ function parseTables(raw) {
     if (!Array.isArray(parsed) || parsed.length === 0) return [];
 
     // New format: [{name, data}, ...]
-    if (parsed[0] && !Array.isArray(parsed[0]) && "data" in parsed[0]) return parsed;
+    if (parsed[0] && !Array.isArray(parsed[0]) && "data" in parsed[0]) {
+      // Normalize status: "Done" or "Complit" -> "Completed"
+      return parsed.map(table => ({
+        ...table,
+        data: table.data.map(row => {
+          const newRow = { ...row };
+          Object.keys(newRow).forEach(key => {
+            if (key.toLowerCase().includes("status")) {
+              const val = newRow[key];
+              if (val && typeof val === "string") {
+                const lower = val.toLowerCase().trim();
+                if (lower === "done" || lower === "complit") {
+                  newRow[key] = "Completed";
+                }
+              }
+            }
+          });
+          return newRow;
+        })
+      }));
+    }
 
     // Array of arrays: [[row, ...], ...]
     if (Array.isArray(parsed[0])) {

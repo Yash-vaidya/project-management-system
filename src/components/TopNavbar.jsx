@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 /**
- * TopNavbar component for QuillPro SaaS UI
+ * TopNavbar component
  * Contains user profile and modal for editing.
  */
 function TopNavbar({ theme, toggleTheme }) {
@@ -43,7 +43,7 @@ function TopNavbar({ theme, toggleTheme }) {
        <header className="h-16 bg-[var(--card-bg)] border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-300">
          
           <div className="flex items-center gap-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block">the title project traking system this only</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block">Project Tracking System</h2>
           </div>
 
          <div className="flex items-center gap-6">
@@ -77,7 +77,7 @@ function TopNavbar({ theme, toggleTheme }) {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center animate-in fade-in duration-200">
           <div className="card-saas p-0 w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">System Administrator Info</h3>
+              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">Edit Profile</h3>
               <button 
                 onClick={() => setShowProfileModal(false)}
                 className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -89,7 +89,7 @@ function TopNavbar({ theme, toggleTheme }) {
             
             <div className="p-6 space-y-5">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Owner Name</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Your Name</label>
                 <input 
                   type="text" 
                   name="name"
@@ -99,7 +99,7 @@ function TopNavbar({ theme, toggleTheme }) {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Assigned Role</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Role</label>
                 <input 
                   type="text" 
                   name="role"
@@ -109,16 +109,16 @@ function TopNavbar({ theme, toggleTheme }) {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Master Password</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Password</label>
                 <input 
                   type="password" 
                   name="password"
-                  placeholder="Enter new password to update..."
+                  placeholder="Enter new password..."
                   value={userProfile.password}
                   onChange={handleProfileChange}
                   className="input-saas w-full h-11"
                 />
-                <p className="text-[9px] text-[var(--text-secondary)] font-medium italic">Credentials stored securely in node local storage.</p>
+                <p className="text-[9px] text-[var(--text-secondary)] font-medium italic">Password is stored locally.</p>
               </div>
             </div>
             
@@ -133,7 +133,7 @@ function TopNavbar({ theme, toggleTheme }) {
                 onClick={saveProfile}
                 className="btn-primary"
               >
-                Save Protocol
+                Save
               </button>
             </div>
           </div>

@@ -10,7 +10,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
   const [isIndexCollapsed, setIsIndexCollapsed] = useState(false);
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
-  const [aboutText, setAboutText] = useState(project.about || "This project node is currently synchronized with the central database. Use the navigation panel to manage tasks, meetings, and system documentation.");
+  const [aboutText, setAboutText] = useState(project.about || "This project is being managed from the dashboard. Use the navigation to manage tasks, meetings and documents.");
   const { addToast } = useToast();
 
   // Trigger flash animation when activePage changes
@@ -101,7 +101,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
               {project.type}
             </span>
           </div>
-          <p className="text-sm text-[var(--text-secondary)] font-medium ml-10">Project Synchronization Vector: Node #{project.id}</p>
+          <p className="text-sm text-[var(--text-secondary)] font-medium ml-10">Project ID: #{project.id}</p>
         </div>
         
         <div className="flex gap-3 ml-10 md:ml-0">
@@ -126,11 +126,11 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
         <div className="lg:col-span-1 space-y-2">
           {[
             { id: null, label: "Overview", icon: "📊" },
-            { id: "task", label: "Task Progress", icon: "📄" },
-            { id: "sod", label: "SOD Matrix", icon: "🗓️" },
-            { id: "mom", label: "MOM Records", icon: "📝" },
-            { id: "notes", label: "System Docs", icon: "📓" },
-            { id: "dashboard", label: "Analytics Hub", icon: "📈" }
+            { id: "task", label: "Tasks", icon: "📄" },
+            { id: "sod", label: "SOD", icon: "🗓️" },
+            { id: "mom", label: "MOM", icon: "📝" },
+            { id: "notes", label: "Documents", icon: "📓" },
+            { id: "dashboard", label: "Analytics", icon: "📈" }
           ].map((item) => (
             <button
               key={item.id}
@@ -147,11 +147,11 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
           ))}
           
           <div className="card-saas p-6 mt-8">
-            <h4 className="text-[10px] font-black uppercase text-[var(--text-secondary)] mb-4 tracking-tighter">Node Telemetry</h4>
+            <h4 className="text-[10px] font-black uppercase text-[var(--text-secondary)] mb-4 tracking-tighter">Project Stats</h4>
             <div className="space-y-4">
                <div>
                   <div className="flex justify-between text-[9px] font-bold mb-1">
-                    <span>AGGR. PROGRESS</span>
+                    <span>PROGRESS</span>
                     <span>{Math.round((stats.completed / (stats.total || 1)) * 100)}%</span>
                   </div>
                   <div className="w-full h-1 bg-[var(--border-color)] rounded-full overflow-hidden">
@@ -162,7 +162,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
                   </div>
                </div>
                <div className="flex justify-between items-center bg-[var(--bg-color)]/30 p-2 rounded">
-                 <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase">Synced Nodes</span>
+                 <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase">Total Items</span>
                  <span className="text-[10px] font-black text-[var(--text-primary)]">{stats.total}</span>
                </div>
             </div>
@@ -189,8 +189,8 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
                </div>
 
                <div className="card-saas p-8 min-h-[400px] flex flex-col justify-center items-center text-center relative group">
-                  <div className="w-20 h-20 bg-[var(--primary-color)]/10 rounded-full flex items-center justify-center text-4xl mb-6">🛰️</div>
-                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Project Execution Core</h3>
+                   <div className="w-20 h-20 bg-[var(--primary-color)]/10 rounded-full flex items-center justify-center text-4xl mb-6">📋</div>
+                   <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Project Overview</h3>
                   
                   {isEditingAbout ? (
                     <div className="w-full max-w-2xl mb-8 flex flex-col gap-3">
@@ -285,8 +285,8 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
     {isEditingMetadata && (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200 text-left">
         <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-          <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Update Project Identity</h3>
+            <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Edit Project</h3>
             <button onClick={() => setIsEditingMetadata(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
           </div>
           
@@ -302,7 +302,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
                   body: JSON.stringify({ name, type }),
                 });
                 if (onUpdateProject) onUpdateProject({ ...project, name, type });
-                addToast("Project identity updated", "success");
+                addToast("Project updated successfully", "success");
                 setIsEditingMetadata(false);
               } catch (err) {
                 addToast("Failed to update project", "error");
@@ -311,7 +311,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
             className="p-6 space-y-5"
           >
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Alias / Name</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Name</label>
               <input 
                 name="projectName"
                 type="text" 
@@ -321,7 +321,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Sector Assignment</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Type</label>
               <select 
                 name="projectType"
                 defaultValue={project.type}
@@ -339,10 +339,10 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
                 onClick={() => setIsEditingMetadata(false)}
                 className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-colors"
               >
-                Cancel Protocol
+                Cancel
               </button>
               <button type="submit" className="btn-primary">
-                Commit Changes
+                Save Changes
               </button>
             </div>
           </form>
