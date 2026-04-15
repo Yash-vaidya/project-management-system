@@ -73,7 +73,7 @@
     {
       "id": "0288",
       "name": "Test Project Alfa",
-      "type": "mern",
+      "type": "dotnet",
       "taskSheet": "[{\"ModuleModule Screen API Comment Status\":\"Auth Login GetConfig Sample Completed\"},{\"ModuleModule Screen API Comment Status\":\"Auth Register PostUser Sample In-Progress\"}]",
       "mom": "[]",
       "sod": "[]",
