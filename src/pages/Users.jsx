@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import AnimatedEye from '../components/AnimatedEye';
 
 function Users() {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -50,6 +52,7 @@ function Users() {
     }
     setShowModal(false);
     setEditingUser(null);
+    setShowPassword(false);
     setFormData({ name: '', email: '', role: 'Member', password: '' });
   };
 
@@ -92,7 +95,7 @@ function Users() {
           <p className='text-sm text-[var(--text-secondary)] font-medium mt-1'>Manage system users and their permissions</p>
         </div>
         <button 
-          onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', role: 'Member', password: '' }); setShowModal(true); }}
+          onClick={() => { setEditingUser(null); setFormData({ name: '', email: '', role: 'Member', password: '' }); setShowPassword(false); setShowModal(true); }}
           className='btn-primary flex items-center gap-2'
         >
           <span>➕</span> Add User
@@ -153,7 +156,7 @@ function Users() {
                 {editingUser ? 'Edit User' : 'Add New User'}
               </h3>
               <button 
-                onClick={() => { setShowModal(false); setEditingUser(null); }}
+                onClick={() => { setShowModal(false); setEditingUser(null); setShowPassword(false); }}
                 className='text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-xl'
               >
                 ✕
@@ -202,22 +205,32 @@ function Users() {
                 <label className='text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]'>
                   {editingUser ? 'New Password' : 'Password'}
                 </label>
-                <input 
-                  type='password' 
-                  name='password'
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required={!editingUser}
-                  className='input-saas w-full h-11'
-                  placeholder={editingUser ? 'Leave empty to keep current' : 'Enter password'}
-                />
+                <div className='relative'>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    name='password'
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required={!editingUser}
+                    className='input-saas w-full h-11 pr-10'
+                    placeholder={editingUser ? 'Leave empty to keep current' : 'Enter password'}
+                  />
+                  <button
+                    type='button'
+                    onClick={() => setShowPassword(!showPassword)}
+                    className='absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--primary-color)] transition-all'
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    <AnimatedEye isOpen={showPassword} />
+                  </button>
+                </div>
               </div>
             </form>
             
             <div className='p-4 bg-[var(--bg-color)]/50 border-t border-[var(--border-color)] flex justify-end gap-3'>
               <button 
                 type='button'
-                onClick={() => { setShowModal(false); setEditingUser(null); }}
+                onClick={() => { setShowModal(false); setEditingUser(null); setShowPassword(false); }}
                 className='px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-colors'
               >
                 Cancel
