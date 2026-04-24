@@ -69,7 +69,7 @@ function App() {
 
   return (
     <ToastProvider>
-    <div className={`min-h-screen transition-colors duration-300`} style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
+    <div className={`min-h-screen transition-colors duration-300`} style={{ color: 'var(--text-color)' }}>
       <Router>
         <Routes>
           <Route 
@@ -80,7 +80,7 @@ function App() {
             path='/*'
             element={
               isLoggedIn ? (
-                <div className='flex h-screen overflow-hidden bg-[var(--bg-color)]'>
+                <div className='flex h-screen overflow-hidden bg-transparent'>
                   <Navbar onLogout={() => handleLogin(false)} isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
                   <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
                     <TopNavbar theme={theme} toggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />

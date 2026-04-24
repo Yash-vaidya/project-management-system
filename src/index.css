@@ -3,12 +3,15 @@
 :root {
   /* QuillPro Light Palette */
   --primary-color: #4F6AF0;
-  --bg-color: #F5F7FA;
-  --card-bg: #FFFFFF;
+  --bg-color: rgba(245, 247, 250, 0.5);
+  --bg-image: url('./assets/light mode.png');
+  --card-bg: rgba(255, 255, 255, 0.90); /* White glass with high opacity for visibility */
   --sidebar-bg: #1A1D2E;
-  --text-primary: #2D3748;
-  --text-secondary: #718096;
-  --border-color: #E2E8F0;
+  --text-primary: #7C2D12; /* Darker, richer orange/brown for extreme contrast */
+  --text-secondary: #FF6600; /* Extremely bright, vivid orange */
+  --border-color: rgba(255, 255, 255, 0.9);
+  --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  --card-shadow-hover: 0 12px 48px 0 rgba(31, 38, 135, 0.25);
   --success: #34C38F;
   --info: #4F6AF0;
   --warning: #F1B44C;
@@ -22,19 +25,27 @@
 [class~="dark"] {
   /* QuillPro Dark Palette */
   --bg-color: #151521;
-  --card-bg: #1E1E2D;
+  --bg-image: url('./assets/dark mode.jpg');
+  --card-bg: rgba(30, 30, 45, 0.75);
   --sidebar-bg: #1A1D2E;
-  --text-primary: #E9ECEF;
+  --text-primary: #F7FAFC;
   /* Reverted to original */
-  --text-secondary: #ABB4D2;
+  --text-secondary: #A0AEC0;
   /* Reverted to original */
-  --border-color: #32394E;
+  --border-color: rgba(50, 57, 78, 0.6);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 12px 48px 0 rgba(0, 0, 0, 0.6);
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--text-primary);
   background-color: var(--bg-color);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
@@ -44,11 +55,17 @@ body {
 /* --- QuillPro Global Utilities --- */
 
 .card-saas {
-  @apply bg-[var(--card-bg)] rounded-lg shadow-sm border border-[var(--border-color)] transition-all duration-200;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  @apply rounded-xl transition-all duration-300;
 }
 
 .card-saas:hover {
-  @apply shadow-md;
+  box-shadow: var(--card-shadow-hover);
+  @apply -translate-y-1;
 }
 
 .btn-primary {
@@ -64,7 +81,7 @@ body {
 }
 
 .input-saas {
-  @apply bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-primary)] rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/20 transition-all placeholder:text-[var(--text-secondary)]/50;
+  @apply bg-[var(--card-bg)] backdrop-blur-md border border-[var(--border-color)] text-[var(--text-primary)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/30 focus:border-[var(--primary-color)]/50 transition-all placeholder:text-[var(--text-secondary)]/50;
 }
 
 /* 8px Grid System Helpers */

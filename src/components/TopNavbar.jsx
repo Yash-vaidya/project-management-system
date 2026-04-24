@@ -69,10 +69,10 @@ function TopNavbar({ theme, toggleTheme }) {
 
    return (
      <>
-       <header className='h-16 bg-[var(--card-bg)] border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-300'>
+       <header className='h-16 bg-[var(--card-bg)] backdrop-blur-xl border-b border-[var(--border-color)] flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-300 shadow-sm'>
          
           <div className='flex items-center gap-4'>
-            <h2 className='text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] hidden lg:block'>Project Tracking System</h2>
+            <h2 className='text-xs font-black uppercase tracking-[0.2em] text-[var(--text-primary)] hidden lg:block drop-shadow-md'>Project Tracking System</h2>
           </div>
 
          <div className='flex items-center gap-6'>

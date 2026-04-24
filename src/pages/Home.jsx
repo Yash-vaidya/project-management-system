@@ -78,9 +78,9 @@ function Home() {
 
   return (
     <div className="max-w-[1600px] mx-auto animate-fadeIn p-4">
-      <div className="flex items-center justify-between mb-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 card-saas px-8 py-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase drop-shadow-md">Dashboard</h1>
           <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Welcome: Yash Vaidya</p>
         </div>
         <div className="flex gap-3">
