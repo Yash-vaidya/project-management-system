@@ -12,7 +12,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
   const [editingProject, setEditingProject] = useState(null);
   const { addToast } = useToast();
 
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 12;
 
   const fetchProjects = () => {
     fetch("http://localhost:5000/projects")
@@ -99,21 +99,21 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
   };
 
   const categories = [
-    { id: "mern", name: "MERN Stack", icon: "⚛️" },
-    { id: "dotnet", name: ".NET Development", icon: "🪟" },
-    { id: "website", name: "Websites", icon: "🌐" }
+    { id: "mern", name: "MERN Stack", icon: "⚛️", gradient: "from-[#FF0080] to-[#7928CA]" },
+    { id: "dotnet", name: ".NET Development", icon: "🪟", gradient: "from-[#FF0080] to-[#7928CA]" },
+    { id: "website", name: "Websites", icon: "🌐", gradient: "from-[#FF0080] to-[#7928CA]" }
   ];
 
   return (
     <div className="max-w-[1600px] mx-auto animate-fadeIn">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase">All Projects</h1>
+          <h1 className="text-3xl font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent tracking-tighter uppercase">All Projects</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Total: {projects.length} projects</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-4">
           {categories.map((cat) => {
             const catProjects = projects.filter(p => p.type === cat.id).map(p => {
                const metrics = calculateMetrics(p.taskSheet);
@@ -135,20 +135,20 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                 onDrop={(e) => handleDrop(e, cat.id)}
               >
                 {/* Category Header */}
-                <div className="flex items-center justify-between mb-6 px-4">
+                <div className="flex items-center justify-between mb-3 px-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl grayscale group-hover:grayscale-0 transition-all duration-300">{cat.icon}</span>
+                    <span className="text-xl grayscale group-hover:grayscale-0 transition-all duration-300">{cat.icon}</span>
                     <div>
-                      <h2 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-widest">
+                      <h2 className={`text-xs font-black bg-gradient-to-r ${cat.gradient} bg-clip-text text-transparent uppercase tracking-widest`}>
                         {cat.name}
                       </h2>
-                      <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter mt-0.5">{catProjects.length} projects</p>
+                      <p className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-tighter mt-0.5">{catProjects.length} projects</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Project Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
                   {paginatedProjects.length > 0 ? (
                     paginatedProjects.map((proj) => (
                       <div 
@@ -158,13 +158,13 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                         onDragStart={(e) => e.dataTransfer.setData("projectId", proj.id.toString())}
                         className="card-saas p-0 group cursor-pointer flex flex-col h-full hover:-translate-y-1"
                       >
-                        <div className="p-5 flex-1">
-                           <div className="flex justify-between items-start mb-4">
-                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shadow-sm ${proj.progress > 80 ? 'bg-[var(--success)]/10 text-[var(--success)]' : 'bg-[var(--warning)]/10 text-[var(--warning)]'}`}>
+                        <div className="p-3 flex-1">
+                           <div className="flex justify-between items-start mb-2">
+                             <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm ${proj.progress > 80 ? 'bg-[var(--success)]/10 text-[var(--success)]' : 'bg-[var(--warning)]/10 text-[var(--warning)]'}`}>
                                {cat.icon}
                              </div>
                              <div className="flex flex-col items-end gap-2">
-                               <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase bg-[var(--bg-color)] px-2 py-1 rounded tracking-tighter shadow-sm">ID: {proj.id}</span>
+                               <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase bg-[var(--bg-color)] px-2 py-1 rounded tracking-tighter shadow-sm">ID: {proj.id}</span>
                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                  <button 
                                    onClick={(e) => {
@@ -189,16 +189,16 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                                </div>
                              </div>
                            </div>
-                           <h3 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors line-clamp-1">{proj.name}</h3>
-                           <p className="text-[10px] text-[var(--text-secondary)] font-medium mt-1 uppercase tracking-tight">{categories.find(c => c.id === proj.type)?.name || 'MERN Stack'}</p>
+                           <h3 className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors line-clamp-1">{proj.name}</h3>
+                           <p className="text-[9px] text-[var(--text-secondary)] font-medium mt-0.5 uppercase tracking-tight">{categories.find(c => c.id === proj.type)?.name || 'MERN Stack'}</p>
                         </div>
                         
-                        <div className="px-5 py-4 border-t border-[var(--border-color)] bg-[var(--bg-color)]/20">
-                           <div className="flex justify-between items-center mb-2">
-                             <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase">Progress</span>
-                             <span className="text-[10px] font-black text-[var(--text-primary)]">{proj.progress}%</span>
+                        <div className="px-3 py-2 border-t border-[var(--border-color)] bg-[var(--bg-color)]/20">
+                           <div className="flex justify-between items-center mb-1.5">
+                             <span className="text-[8px] font-bold text-[var(--text-secondary)] uppercase">Progress</span>
+                             <span className="text-[9px] font-black text-[var(--text-primary)]">{proj.progress}%</span>
                            </div>
-                           <div className="w-full h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
+                           <div className="w-full h-1 bg-[var(--border-color)] rounded-full overflow-hidden">
                              <div 
                                className={`h-full transition-all duration-1000 ${proj.progress > 80 ? 'bg-[var(--success)]' : 'bg-[var(--primary-color)]'}`} 
                                style={{ width: `${proj.progress}%` }}
@@ -242,7 +242,7 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Edit Project</h3>
+              <h3 className="text-lg font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent tracking-tight uppercase">Edit Project</h3>
               <button onClick={() => setEditingProject(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
             </div>
             
