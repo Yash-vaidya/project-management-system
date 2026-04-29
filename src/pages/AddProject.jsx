@@ -1,20 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { excelToJson } from "../utils/excelToJson";
 import { useToast } from "../utils/ToastContext";
 import { useNavigate } from "react-router-dom";
 
-/**
- * AddProject Component
- * Simple project creation form
- */
 function AddProject() {
   const [name, setName] = useState("");
   const [type, setType] = useState("mern");
-  const [notes, setNotes] = useState([]); // PDF documents
+  const [notes, setNotes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const { addToast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      // Only Super Admin and Admin can create projects
+      if (user.role !== 'Super Admin' && user.role !== 'Admin') {
+        addToast('You do not have permission to create projects', 'error');
+        navigate('/');
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [navigate, addToast]);
 
   // Excel Import States
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -174,11 +184,11 @@ function AddProject() {
 
       if (!res.ok) throw new Error("Server error.");
 
-      addToast("Project created successfully!", "success");
-      navigate("/");
-    } catch (err) {
-      setFormError("Something went wrong. Please try again.");
-    } finally {
+       addToast("Project created successfully!", "success");
+       navigate("/");
+     } catch {
+       setFormError("Something went wrong. Please try again.");
+     } finally {
       setIsSubmitting(false);
     }
   };

@@ -106,17 +106,19 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
         
         <div className="flex gap-3 ml-10 md:ml-0">
           <button 
-            onClick={() => setIsEditingMetadata(true)}
+            onClick={onUpdateProject}
             className="p-2 px-4 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
           >
             ✏️ Edit Metadata
           </button>
-          <button 
-            onClick={onDelete}
-            className="p-2 px-4 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
-          >
-            🗑️ Delete Project
-          </button>
+          {onDelete && (
+            <button 
+              onClick={onDelete}
+              className="p-2 px-4 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
+            >
+              🗑️ Delete Project
+            </button>
+          )}
         </div>
       </div>
 

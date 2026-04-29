@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import logo from '../assets/logo.svg';
+import { useState } from "react";
+import logo from "../assets/logo.svg";
+import AnimatedEye from "../components/AnimatedEye";
 
 function Login({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = (e) => {
@@ -14,82 +16,140 @@ function Login({ onLogin }) {
 
     setTimeout(() => {
       const savedUsers = localStorage.getItem('systemUsers');
-      const users = savedUsers ? JSON.parse(savedUsers) : [
-        { id: 1, name: 'Yash Vaidya', email: 'yash@trackbord.com', role: 'Administrator', password: 'admin123' }
-      ];
-      
-      const user = users.find(u => (u.email === username || u.name === username) && u.password === password);
-      
+      const users = savedUsers ? JSON.parse(savedUsers) : [];
+
+      // Find user by mobile number and password
+      const user = users.find(u => u.mobile === username && u.password === password);
+
       if (user) {
         localStorage.setItem('currentUser', JSON.stringify(user));
         onLogin();
       } else {
-        setError('Invalid username or password.');
+        setError('Invalid mobile number or password.');
         setIsLoading(false);
       }
     }, 800);
   };
 
   return (
-    <div className='h-screen w-full flex items-center justify-center p-4 transition-colors duration-300' style={{ backgroundColor: 'var(--bg-color)' }}>
-      <div className='w-full max-w-md dark:bg-white/10 bg-white/80 backdrop-blur-2xl border dark:border-white/20 border-black/10 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 transform scale-100 transition-all duration-500 animate-in fade-in zoom-in-95'>
-        
-        <div className='text-center mb-10'>
-          <div className='inline-block p-6 bg-[var(--accent-color)]/20 rounded-3xl mb-4 border border-[var(--accent-color)]/20 w-24 h-24'>
-            <img src={logo} alt='Project Logo' className='w-full h-full object-contain filter invert dark:invert-0' />
-          </div>
-          <h1 className='text-3xl font-black dark:text-white text-[var(--text-color)] tracking-tight uppercase mb-2'>Login</h1>
-          <p className='dark:text-indigo-200/60 text-black/40 text-sm font-medium tracking-wide font-black uppercase tracking-[0.2em] scale-y-110'>Project Tracking System</p>
+    <div className="min-h-screen w-full flex">
+      {/* Left Side */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-[var(--primary-color)]/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
         </div>
 
-        <form onSubmit={handleLogin} className='space-y-6'>
-          <div>
-            <label className='block text-[10px] font-black dark:text-indigo-300 text-black/40 uppercase tracking-widest mb-2 ml-1'>Username / Email</label>
-            <input
-              type='text'
-              required
-              className='w-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-2xl px-5 py-4 dark:text-white text-[var(--text-color)] placeholder-black/20 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/50 transition-all font-bold'
-              placeholder='Enter username or email'
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className='block text-[10px] font-black dark:text-indigo-300 text-black/40 uppercase tracking-widest mb-2 ml-1'>Password</label>
-            <input
-              type='password'
-              required
-              className='w-full dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/10 rounded-2xl px-5 py-4 dark:text-white text-[var(--text-color)] placeholder-black/20 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]/50 transition-all font-bold'
-              placeholder='Enter password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          {error && (
-            <div className='bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest py-3 px-4 rounded-xl text-center animate-pulse'>
-              {error}
+        <div className="relative z-10 w-full max-w-md">
+          {/* Logo */}
+          <div className="mb-8 flex justify-center">
+            <div className="p-4 bg-gradient-to-br from-[var(--primary-color)] to-purple-600 rounded-2xl shadow-lg">
+              <img
+                src={logo}
+                alt="Project Logo"
+                className="w-16 h-16 object-contain filter brightness-0 invert"
+              />
             </div>
-          )}
+          </div>
 
-          <button
-            type='submit'
-            disabled={isLoading}
-            className={`w-full bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white font-black py-4 rounded-2xl shadow-xl shadow-green-600/20 transition-all transform active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
-          >
-            {isLoading ? (
-              <span className='flex gap-1'>
-                <span className='w-1.5 h-1.5 bg-white rounded-full animate-bounce'></span>
-                <span className='w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:0.2s]'></span>
-                <span className='w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:0.4s]'></span>
-              </span>
-            ) : 'Login'}
-          </button>
-        </form>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-black bg-gradient-to-r from-[var(--primary-color)] to-purple-600 bg-clip-text text-transparent uppercase">
+              Welcome Back
+            </h1>
+            <p className="text-gray-500 text-sm mt-2">Sign in to continue</p>
+          </div>
 
-        <div className='mt-10 pt-6 border-t dark:border-white/5 border-black/5 text-center'>
-          <p className='dark:text-white/20 text-black/20 text-[10px] font-bold tracking-widest uppercase'>Version 1.0</p>
+           {/* Form */}
+           <form onSubmit={handleLogin} className="space-y-5">
+             {/* Mobile Number */}
+             <div>
+               <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-widest">
+                 Mobile Number *
+               </label>
+               <input
+                 type="tel"
+                 required
+                 value={username}
+                 onChange={(e) => setUsername(e.target.value)}
+                 placeholder="Enter 10-digit mobile number"
+                 className="w-full bg-white border-2 border-gray-300 rounded-xl px-5 py-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/20 focus:border-[var(--primary-color)] transition-all font-medium shadow-sm"
+               />
+             </div>
+
+             {/* Password */}
+             <div>
+               <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-widest">
+                 Password *
+               </label>
+               <div className="relative">
+                 <input
+                   type={showPassword ? "text" : "password"}
+                   required
+                   value={password}
+                   onChange={(e) => setPassword(e.target.value)}
+                   placeholder="Enter your password"
+                   className="w-full bg-white border-2 border-gray-300 rounded-xl px-5 py-4 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/20 focus:border-[var(--primary-color)] transition-all font-medium shadow-sm"
+                 />
+                 <button
+                   type="button"
+                   onClick={() => setShowPassword(!showPassword)}
+                   className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-[var(--primary-color)] transition-colors"
+                   title={showPassword ? "Hide password" : "Show password"}
+                 >
+                   <AnimatedEye isOpen={showPassword} />
+                 </button>
+               </div>
+             </div>
+
+             {/* Error */}
+             {error && (
+               <div className="bg-red-50 border-2 border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl font-medium">
+                 {error}
+               </div>
+             )}
+
+             {/* Button */}
+             <button
+               type="submit"
+               disabled={isLoading}
+               className="w-full bg-gradient-to-r from-[var(--primary-color)] to-purple-600 hover:from-[#3A56D0] hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-[var(--primary-color)]/30 transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+             >
+               {isLoading ? (
+                 <span className="flex gap-1.5">
+                   <span className="w-2.5 h-2.5 bg-white rounded-full animate-bounce"></span>
+                   <span className="w-2.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                   <span className="w-2.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                 </span>
+              ) : "Sign In"}
+             </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-500">
+            Don't have an account? 
+            <span className="text-[var(--primary-color)] font-bold cursor-pointer ml-1">
+              Contact Admin
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[var(--primary-color)] via-purple-600 to-indigo-700 items-center justify-center text-white">
+        <div className="text-center">
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-32 h-32 mx-auto mb-6 filter brightness-0 invert"
+          />
+
+          <h2 className="text-3xl font-black uppercase mb-4">
+            Project Management
+          </h2>
+
+          <p className="text-lg text-white/80">
+            Streamline your workflow
+          </p>
         </div>
       </div>
     </div>
