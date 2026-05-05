@@ -19,9 +19,7 @@ function Users() {
       setUsers(JSON.parse(savedUsers));
     } else {
       const defaultUsers = [
-        { id: 1, name: 'Yash Vaidya', email: 'yash@trackbord.com', role: 'Administrator', password: 'admin123' },
-        { id: 2, name: 'John Doe', email: 'john@trackbord.com', role: 'Member', password: 'user123' },
-        { id: 3, name: 'Jane Smith', email: 'jane@trackbord.com', role: 'Viewer', password: 'viewer123' },
+        { id: 1, name: 'Yash Vaidya', email: 'yashvaidya9623@gmail.com', role: 'Administrator', password: '9056' }
       ];
       setUsers(defaultUsers);
       localStorage.setItem('systemUsers', JSON.stringify(defaultUsers));
