@@ -79,7 +79,6 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
     if (!project || project.type === catId) return;
 
     try {
-      // Optimistically update UI
       const updatedProject = { ...project, type: catId };
       setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
       
@@ -134,7 +133,6 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, cat.id)}
               >
-                {/* Category Header */}
                 <div className="flex items-center justify-between mb-6 px-4">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl grayscale group-hover:grayscale-0 transition-all duration-300">{cat.icon}</span>
@@ -147,74 +145,81 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                   </div>
                 </div>
 
-                {/* Project Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                  {paginatedProjects.length > 0 ? (
-                    paginatedProjects.map((proj) => (
-                      <div 
-                        key={proj.id} 
-                        onClick={() => navigate(`/project/${proj.id}`)}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData("projectId", proj.id.toString())}
-                        className="card-saas p-0 group cursor-pointer flex flex-col h-full hover:-translate-y-1"
-                      >
-                        <div className="p-5 flex-1">
-                           <div className="flex justify-between items-start mb-4">
-                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shadow-sm ${proj.progress > 80 ? 'bg-[var(--success)]/10 text-[var(--success)]' : 'bg-[var(--warning)]/10 text-[var(--warning)]'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                   {paginatedProjects.length > 0 ? (
+                     paginatedProjects.map((proj) => (
+                       <div 
+                         key={proj.id} 
+                         onClick={() => navigate(`/project/${proj.id}`)}
+                         draggable
+                         onDragStart={(e) => e.dataTransfer.setData("projectId", proj.id.toString())}
+                         className="card-saas p-3 group cursor-pointer h-[200px] flex flex-col hover:-translate-y-1 transition-transform"
+                       >
+                         <div className="flex-none mb-3">
+                           <div className="flex items-start justify-between gap-2">
+                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-lg ${proj.progress > 80 ? 'bg-[var(--success)]/20 text-[var(--success)]' : 'bg-[var(--warning)]/10 text-[var(--warning)]'}`}>
                                {cat.icon}
                              </div>
-                             <div className="flex flex-col items-end gap-2">
-                               <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase bg-[var(--bg-color)] px-2 py-1 rounded tracking-tighter shadow-sm">ID: {proj.id}</span>
-                               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                 <button 
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     setEditingProject({ id: proj.id, name: proj.name, type: proj.type });
-                                   }}
-                                   className="p-1 px-2 bg-[var(--bg-color)] hover:bg-[var(--primary-color)] hover:text-white rounded text-[10px] transition-all"
-                                   title="Edit"
-                                 >
-                                   ✏️
-                                 </button>
-                                 <button 
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     deleteProject(proj.id, proj.name);
-                                   }}
-                                   className="p-1 px-2 bg-[var(--bg-color)] hover:bg-red-500/10 hover:text-red-500 rounded text-[10px] transition-all"
-                                   title="Delete"
-                                 >
-                                   🗑️
-                                 </button>
-                               </div>
+                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   setEditingProject({ id: proj.id, name: proj.name, type: proj.type });
+                                 }}
+                                 className="p-1.5 bg-[var(--bg-color)] hover:bg-[var(--primary-color)] hover:text-white rounded transition-all"
+                                 title="Edit"
+                               >
+                                 ✏️
+                               </button>
+                               <button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   deleteProject(proj.id, proj.name);
+                                 }}
+                                 className="p-1.5 bg-[var(--bg-color)] hover:bg-red-500/10 hover:text-red-500 rounded transition-all"
+                                 title="Delete"
+                               >
+                                 🗑️
+                               </button>
                              </div>
                            </div>
-                           <h3 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors line-clamp-1">{proj.name}</h3>
-                           <p className="text-[10px] text-[var(--text-secondary)] font-medium mt-1 uppercase tracking-tight">{categories.find(c => c.id === proj.type)?.name || 'MERN Stack'}</p>
-                        </div>
-                        
-                        <div className="px-5 py-4 border-t border-[var(--border-color)] bg-[var(--bg-color)]/20">
-                           <div className="flex justify-between items-center mb-2">
-                             <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase">Progress</span>
-                             <span className="text-[10px] font-black text-[var(--text-primary)]">{proj.progress}%</span>
+                           
+                           <span className="text-[9px] font-black text-[var(--text-secondary)] uppercase bg-[var(--bg-color)] px-2 py-0.5 rounded mt-2 inline-block">
+                             ID: {proj.id}
+                           </span>
+                         </div>
+
+                         <div className="flex-1 flex flex-col min-h-0">
+                           <h3 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--primary-color)] transition-colors line-clamp-2 leading-tight mb-2">
+                             {proj.name}
+                           </h3>
+                           
+                           <p className="text-[10px] text-[var(--text-secondary)] font-medium uppercase tracking-tight mb-3">
+                             {categories.find(c => c.id === proj.type)?.name || 'MERN Stack'}
+                           </p>
+                         </div>
+
+                         <div className="flex-none pt-3 border-t border-[var(--border-color)] mt-auto">
+                           <div className="flex justify-between items-center mb-1.5">
+                             <span className="text-[8px] font-black uppercase tracking-wider text-[var(--text-secondary)]">Progress</span>
+                             <span className="text-[10px] font-bold text-[var(--text-primary)]">{proj.progress}%</span>
                            </div>
-                           <div className="w-full h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
+                           <div className="w-full h-1.5 bg-[var(--bg-color)] rounded-full overflow-hidden">
                              <div 
-                               className={`h-full transition-all duration-1000 ${proj.progress > 80 ? 'bg-[var(--success)]' : 'bg-[var(--primary-color)]'}`} 
+                               className={`h-full transition-all duration-500 rounded-full ${proj.progress > 80 ? 'bg-[var(--success)]' : proj.progress > 50 ? 'bg-[var(--primary-color)]' : 'bg-[var(--warning)]'}`} 
                                style={{ width: `${proj.progress}%` }}
                              ></div>
                            </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full py-12 text-center border-2 border-dashed border-[var(--border-color)] rounded-xl">
-                      <p className="text-[var(--text-secondary)] text-sm font-medium italic">No projects in this category yet.</p>
-                    </div>
-                  )}
-                </div>
+                         </div>
+                       </div>
+                     ))
+                   ) : (
+                     <div className="col-span-full py-12 text-center border-2 border-dashed border-[var(--border-color)] rounded-xl">
+                       <p className="text-[var(--text-secondary)] text-sm font-medium italic">No projects in this category yet.</p>
+                     </div>
+                   )}
+                 </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-center mt-8 gap-2">
                     {[...Array(totalPages)].map((_, i) => (
@@ -237,55 +242,55 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
           })}
         </div>
 
-      {/* Project Edit Modal */}
-      {editingProject && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Edit Project</h3>
-              <button onClick={() => setEditingProject(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
-            </div>
-            
-            <form onSubmit={updateProject} className="p-6 space-y-5">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Name</label>
-                <input 
-                  type="text" 
-                  value={editingProject.name}
-                  onChange={(e) => setEditingProject({...editingProject, name: e.target.value})}
-                  className="input-saas w-full h-11"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Type</label>
-                <select 
-                  value={editingProject.type}
-                  onChange={(e) => setEditingProject({...editingProject, type: e.target.value})}
-                  className="input-saas w-full h-11 bg-[var(--card-bg)]"
-                >
-                  <option value="mern">MERN Stack</option>
-                  <option value="dotnet">.NET Development</option>
-                  <option value="website">Websites</option>
-                </select>
+        {editingProject && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Edit Project</h3>
+                <button onClick={() => setEditingProject(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
               </div>
               
-              <div className="pt-4 flex justify-end gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setEditingProject(null)}
-                  className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-colors"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  Save
-                </button>
-              </div>
-            </form>
+              <form onSubmit={updateProject} className="p-6 space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Name</label>
+                  <input 
+                    type="text" 
+                    value={editingProject.name}
+                    onChange={(e) => setEditingProject({...editingProject, name: e.target.value})}
+                    className="input-saas w-full h-11"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Type</label>
+                  <select 
+                    value={editingProject.type}
+                    onChange={(e) => setEditingProject({...editingProject, type: e.target.value})}
+                    className="input-saas w-full h-11 bg-[var(--card-bg)]"
+                  >
+                    <option value="mern">MERN Stack</option>
+                    <option value="dotnet">.NET Development</option>
+                    <option value="website">Websites</option>
+                  </select>
+                </div>
+                
+                <div className="pt-4 flex justify-end gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setEditingProject(null)}
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:bg-[var(--bg-color)] rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
