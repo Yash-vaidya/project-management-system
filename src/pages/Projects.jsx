@@ -395,8 +395,8 @@ function Projects() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -9,6 +9,11 @@ function Login({ onLogin }) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // ABSOLUTELY STATIC CREDENTIALS - UNCHANGEABLE
+  const hardcodedEmail = 'yashvaidya9623@gmail.com';
+  const hardcodedPassword = '9056';
+  const adminName = 'Yash Vaidya';
+
   const handleLogin = (e) => {
     e.preventDefault();
     setIsLoading(true);

@@ -111,8 +111,8 @@ function Home() {
          )}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+      {/* Stats Cards - 6 boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-12">
         <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
           <div className="w-12 h-12 bg-[#556EE6]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">📁</div>
           <div>
@@ -139,6 +139,20 @@ function Home() {
           <div>
             <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Status</p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">Active</h3>
+          </div>
+        </div>
+        <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
+          <div className="w-12 h-12 bg-[var(--accent)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">👥</div>
+          <div>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Team Members</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">8</h3>
+          </div>
+        </div>
+        <div className="card-saas p-6 flex items-center gap-4 hover:border-[var(--primary-color)] transition-colors">
+          <div className="w-12 h-12 bg-[var(--info)]/10 rounded-lg flex items-center justify-center text-xl shadow-inner">🔔</div>
+          <div>
+            <p className="text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Notifications</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mt-1">3</h3>
           </div>
         </div>
       </div>
