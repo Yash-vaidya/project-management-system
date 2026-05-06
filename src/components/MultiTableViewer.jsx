@@ -174,7 +174,7 @@ function MultiTableViewer({ tablesData, title = "Table", onSave, toggleSidebar, 
           <div className="w-20 h-20 bg-[var(--primary-color)]/10 rounded-full flex items-center justify-center text-4xl mb-6">
             {title === "MOM" ? "📝" : "🗓️"}
           </div>
-          <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">No {title} Data Detected</h3>
+          <h3 className="text-lg font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent mb-2">No {title} Data Detected</h3>
           <p className="text-sm text-[var(--text-secondary)] max-w-sm mb-8 font-medium">
             Initialize a new data vector to begin tracking {title} parameters for this project node.
           </p>

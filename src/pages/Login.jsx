@@ -1,10 +1,12 @@
-import logo from '../assets/logo.svg';
-import { useState } from 'react';
+import { useState } from "react";
+import logo from "../assets/logo.svg";
+import AnimatedEye from "../components/AnimatedEye";
 
 function Login({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // ABSOLUTELY STATIC CREDENTIALS - UNCHANGEABLE
@@ -17,100 +19,143 @@ function Login({ onLogin }) {
     setIsLoading(true);
     setError('');
 
-    const isValid = (
-      (username === hardcodedEmail || username.toLowerCase() === adminName.toLowerCase())
-      && password === hardcodedPassword
-    );
+    setTimeout(() => {
+      const savedUsers = localStorage.getItem('systemUsers');
+      const users = savedUsers ? JSON.parse(savedUsers) : [];
 
-    if (isValid) {
-      localStorage.setItem('currentUser', JSON.stringify({
-        id: 1,
-        name: adminName,
-        email: hardcodedEmail,
-        role: 'Administrator',
-        password: hardcodedPassword
-      }));
-      onLogin();
-    } else {
-      setError('⚠️ Incorrect credentials. Please use: Email=yashvaidya9623@gmail.com & Password=9056 OR Name=Yash Vaidya & Password=9056');
-      setIsLoading(false);
-    }
+      // Find user by mobile number and password
+      const user = users.find(u => u.mobile === username && u.password === password);
+
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        onLogin();
+      } else {
+        setError('Invalid mobile number or password.');
+        setIsLoading(false);
+      }
+    }, 800);
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center p-4' style={{ backgroundColor: '#f8fafc' }}>
-      <div className='w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-200 p-8'>
-        {/* Brand header */}
-        <div className='text-center mb-10'>
-          <div className='flex justify-center mb-4'>
-            <div className='w-16 h-16 bg-[#556EE6] rounded-xl flex items-center justify-center shadow-lg shadow-[#556EE6]/20'>
-              <img src={logo} alt='Project Logo' className='w-10 h-10 object-contain' />
-            </div>
-          </div>
-          <h1 className='text-2xl font-bold tracking-tight text-gray-900'>
-            Trackbord
-          </h1>
-          <p className='text-[10px] font-medium text-gray-500 uppercase tracking-widest mt-2'>
-            Admin Dashboard
-          </p>
+    <div className="min-h-screen w-full flex">
+      {/* Left Side */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-[var(--primary-color)]/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
         </div>
 
-        <form onSubmit={handleLogin} className='space-y-5'>
-          {error && (
-            <div className='bg-red-50 border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest py-3 px-4 rounded-xl text-center'>
-              {error}
+        <div className="relative z-10 w-full max-w-md">
+          {/* Logo */}
+          <div className="mb-8 flex justify-center">
+            <div className="p-4 bg-gradient-to-br from-[var(--primary-color)] to-purple-600 rounded-2xl shadow-lg">
+              <img
+                src={logo}
+                alt="Project Logo"
+                className="w-16 h-16 object-contain filter brightness-0 invert"
+              />
             </div>
-          )}
-
-          <div>
-            <label className='block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-2 ml-1'>
-              Username / Email
-            </label>
-            <input
-              type='text'
-              required
-              className='w-full h-11 px-4 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#556EE6] transition-all font-medium'
-              placeholder='Enter username or email'
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
           </div>
 
-          <div>
-            <label className='block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-2 ml-1'>
-              Password
-            </label>
-            <input
-              type='password'
-              required
-              className='w-full h-11 px-4 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#556EE6] transition-all font-medium'
-              placeholder='Enter password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-black bg-gradient-to-r from-[var(--primary-color)] to-purple-600 bg-clip-text text-transparent uppercase">
+              Welcome Back
+            </h1>
+            <p className="text-gray-500 text-sm mt-2">Sign in to continue</p>
           </div>
 
-          <button
-            type='submit'
-            disabled={isLoading}
-            className={`w-full bg-[#556EE6] hover:bg-[#4356C0] text-white h-11 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
-          >
-            {isLoading ? (
-              <>
-                <span className='flex gap-1'>
-                  <span className='w-2 h-2 bg-white rounded-full animate-bounce'></span>
-                  <span className='w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:0.2s]'></span>
-                  <span className='w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:0.4s]'></span>
-                </span>
-                <span className='text-[10px] font-black uppercase tracking-widest'>Loading...</span>
-              </>
-            ) : (
-              <span className='text-[10px] font-black uppercase tracking-widest flex items-center gap-2'>
-                Login <span className='text-lg'>→</span>
-              </span>
-            )}
-          </button>
-        </form>
+           {/* Form */}
+           <form onSubmit={handleLogin} className="space-y-5">
+             {/* Mobile Number */}
+             <div>
+               <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-widest">
+                 Mobile Number *
+               </label>
+               <input
+                 type="tel"
+                 required
+                 value={username}
+                 onChange={(e) => setUsername(e.target.value)}
+                 placeholder="Enter 10-digit mobile number"
+                 className="w-full bg-white border-2 border-gray-300 rounded-xl px-5 py-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/20 focus:border-[var(--primary-color)] transition-all font-medium shadow-sm"
+               />
+             </div>
+
+             {/* Password */}
+             <div>
+               <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-widest">
+                 Password *
+               </label>
+               <div className="relative">
+                 <input
+                   type={showPassword ? "text" : "password"}
+                   required
+                   value={password}
+                   onChange={(e) => setPassword(e.target.value)}
+                   placeholder="Enter your password"
+                   className="w-full bg-white border-2 border-gray-300 rounded-xl px-5 py-4 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]/20 focus:border-[var(--primary-color)] transition-all font-medium shadow-sm"
+                 />
+                 <button
+                   type="button"
+                   onClick={() => setShowPassword(!showPassword)}
+                   className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-[var(--primary-color)] transition-colors"
+                   title={showPassword ? "Hide password" : "Show password"}
+                 >
+                   <AnimatedEye isOpen={showPassword} />
+                 </button>
+               </div>
+             </div>
+
+             {/* Error */}
+             {error && (
+               <div className="bg-red-50 border-2 border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl font-medium">
+                 {error}
+               </div>
+             )}
+
+             {/* Button */}
+             <button
+               type="submit"
+               disabled={isLoading}
+               className="w-full bg-gradient-to-r from-[var(--primary-color)] to-purple-600 hover:from-[#3A56D0] hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-[var(--primary-color)]/30 transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+             >
+               {isLoading ? (
+                 <span className="flex gap-1.5">
+                   <span className="w-2.5 h-2.5 bg-white rounded-full animate-bounce"></span>
+                   <span className="w-2.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                   <span className="w-2.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                 </span>
+              ) : "Sign In"}
+             </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-500">
+            Don't have an account? 
+            <span className="text-[var(--primary-color)] font-bold cursor-pointer ml-1">
+              Contact Admin
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-[var(--primary-color)] via-purple-600 to-indigo-700 items-center justify-center text-white">
+        <div className="text-center">
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-32 h-32 mx-auto mb-6 filter brightness-0 invert"
+          />
+
+          <h2 className="text-3xl font-black uppercase mb-4">
+            Project Management
+          </h2>
+
+          <p className="text-lg text-white/80">
+            Streamline your workflow
+          </p>
+        </div>
       </div>
     </div>
   );
