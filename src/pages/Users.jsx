@@ -10,16 +10,22 @@ function Users() {
     name: '',
     email: '',
     role: 'Member',
+    developerPosition: '',
     password: ''
   });
 
   useEffect(() => {
     const savedUsers = localStorage.getItem('systemUsers');
     if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
+      const parsed = JSON.parse(savedUsers);
+      const usersWithPosition = parsed.map(user => ({
+        ...user,
+        developerPosition: user.developerPosition || ''
+      }));
+      setUsers(usersWithPosition);
     } else {
       const defaultUsers = [
-        { id: 1, name: 'Yash Vaidya', email: 'yashvaidya9623@gmail.com', role: 'Administrator', password: '9056' }
+        { id: 1, name: 'Yash Vaidya', email: 'yashvaidya9623@gmail.com', role: 'Administrator', password: '9056', developerPosition: '' }
       ];
       setUsers(defaultUsers);
       localStorage.setItem('systemUsers', JSON.stringify(defaultUsers));
@@ -48,10 +54,10 @@ function Users() {
       setUsers(updatedUsers);
       localStorage.setItem('systemUsers', JSON.stringify(updatedUsers));
     }
-    setShowModal(false);
-    setEditingUser(null);
-    setShowPassword(false);
-    setFormData({ name: '', email: '', role: 'Member', password: '' });
+     setShowModal(false);
+     setEditingUser(null);
+     setShowPassword(false);
+     setFormData({ name: '', email: '', role: 'Member', developerPosition: '', password: '' });
   };
 
   const handleEdit = (user) => {
@@ -100,21 +106,22 @@ function Users() {
         </button>
       </div>
 
-      <div className='grid gap-4'>
+       <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3'>
         {users.map(user => (
-          <div 
-            key={user.id}
-            className='card-saas p-4 flex items-center justify-between hover:border-[var(--primary-color)]/30 transition-colors'
-          >
-            <div className='flex items-center gap-4'>
-              <div className='w-12 h-12 bg-[var(--primary-color)] rounded-full flex items-center justify-center text-white font-black text-sm shadow-md'>
-                {getInitials(user.name)}
-              </div>
-              <div>
-                <h3 className='font-bold text-[var(--text-primary)]'>{user.name}</h3>
-                <p className='text-sm text-[var(--text-secondary)]'>{user.email}</p>
-              </div>
-            </div>
+           <div 
+             key={user.id}
+             className='card-saas p-4 flex items-center justify-between border-[var(--border-color)] transition-colors'
+           >
+             <div className='flex items-center gap-4'>
+               <div className='w-12 h-12 bg-[var(--primary-color)] rounded-full flex items-center justify-center text-white font-black text-sm shadow-md'>
+                 {getInitials(user.name)}
+               </div>
+               <div>
+                 <h3 className='font-bold text-[var(--text-primary)]'>{user.name}</h3>
+                 <p className='text-sm text-[var(--text-secondary)]'>{user.email}</p>
+                 {user.developerPosition && <p className='text-sm text-[var(--text-secondary)]'>{user.developerPosition}</p>}
+               </div>
+             </div>
             <div className='flex items-center gap-4'>
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRoleColor(user.role)}`}>
                 {user.role}
@@ -186,19 +193,34 @@ function Users() {
                   placeholder='Enter email address'
                 />
               </div>
-              <div className='space-y-2'>
-                <label className='text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]'>Role</label>
-                <select 
-                  name='role'
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className='input-saas w-full h-11'
-                >
-                  <option value='Administrator'>Administrator</option>
-                  <option value='Member'>Member</option>
-                  <option value='Viewer'>Viewer</option>
-                </select>
-              </div>
+               <div className='space-y-2'>
+                 <label className='text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]'>Role</label>
+                 <select 
+                   name='role'
+                   value={formData.role}
+                   onChange={handleInputChange}
+                   className='input-saas w-full h-11'
+                 >
+                   <option value='Administrator'>Administrator</option>
+                   <option value='Member'>Member</option>
+                   <option value='Viewer'>Viewer</option>
+                 </select>
+               </div>
+               <div className='space-y-2'>
+                 <label className='text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]'>Developer Position</label>
+                 <select 
+                   name='developerPosition'
+                   value={formData.developerPosition}
+                   onChange={handleInputChange}
+                   className='input-saas w-full h-11'
+                 >
+                   <option value=''>Select Developer Position</option>
+                   <option value='Frontend Developer'>Frontend Developer</option>
+                   <option value='Backend Developer'>Backend Developer</option>
+                   <option value='Dot Net Developer'>Dot Net Developer</option>
+                   <option value='Android Developer'>Android Developer</option>
+                 </select>
+               </div>
               <div className='space-y-2'>
                 <label className='text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]'>
                   {editingUser ? 'New Password' : 'Password'}
