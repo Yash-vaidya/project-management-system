@@ -62,16 +62,17 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
     e.preventDefault();
 
     try {
-      await fetch(`http://localhost:5000/projects/${editingProject.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: editingProject.name,
-          type: editingProject.type,
-        }),
-      });
+       await fetch(`http://localhost:5000/projects/${editingProject.id}`, {
+         method: "PATCH",
+         headers: {
+           "Content-Type": "application/json",
+         },
+         body: JSON.stringify({
+           name: editingProject.name,
+           type: editingProject.type,
+           status: editingProject.status,
+         }),
+       });
 
       addToast("Project updated successfully", "success");
 
@@ -282,15 +283,18 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
                         </div>
                       </div>
 
-                      <div className="flex-1 mt-3">
-                        <h3 className="text-sm font-bold text-[var(--text-primary)] line-clamp-2">
-                          {proj.name}
-                        </h3>
+                         <div className="flex-1 mt-3">
+                           <h3 className="text-sm font-bold text-[var(--text-primary)] line-clamp-2">
+                             {proj.name}
+                           </h3>
 
-                        <p className="text-[10px] text-[var(--text-secondary)] mt-2 uppercase">
-                          {cat.name}
-                        </p>
-                      </div>
+                           <p className="text-[10px] text-[var(--text-secondary)] mt-2 uppercase">
+                             {cat.name}
+                           </p>
+                           <p className="text-[10px] text-[var(--text-secondary)] mt-1 uppercase">
+                             {proj.status || 'In Progress'}
+                           </p>
+                         </div>
 
                       <div className="pt-3 border-t border-[var(--border-color)]">
                         <div className="flex justify-between items-center mb-1">
@@ -362,53 +366,75 @@ function Projects({ toggleSidebar, isSidebarCollapsed }) {
               </button>
             </div>
 
-            <form
-              onSubmit={updateProject}
-              className="p-6 space-y-5"
-            >
-              <div>
-                <label className="text-[10px] font-bold uppercase">
-                  Project Name
-                </label>
+             <form
+               onSubmit={updateProject}
+               className="p-6 space-y-5"
+             >
+               <div>
+                 <label className="text-[10px] font-bold uppercase">
+                   Project Name
+                 </label>
 
-                <input
-                  type="text"
-                  value={editingProject.name}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      name: e.target.value,
-                    })
-                  }
-                  className="input-saas w-full h-11"
-                  required
-                />
-              </div>
+                 <input
+                   type="text"
+                   value={editingProject.name}
+                   onChange={(e) =>
+                     setEditingProject({
+                       ...editingProject,
+                       name: e.target.value,
+                     })
+                   }
+                   className="input-saas w-full h-11"
+                   required
+                 />
+               </div>
 
-              <div>
-                <label className="text-[10px] font-bold uppercase">
-                  Project Type
-                </label>
+               <div>
+                 <label className="text-[10px] font-bold uppercase">
+                   Project Type
+                 </label>
 
-                <select
-                  value={editingProject.type}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      type: e.target.value,
-                    })
-                  }
-                  className="input-saas w-full h-11"
-                >
-                  <option value="mern">MERN Stack</option>
-                  <option value="dotnet">
-                    .NET Development
-                  </option>
-                  <option value="website">
-                    Websites
-                  </option>
-                </select>
-              </div>
+                 <select
+                   value={editingProject.type}
+                   onChange={(e) =>
+                     setEditingProject({
+                       ...editingProject,
+                       type: e.target.value,
+                     })
+                   }
+                   className="input-saas w-full h-11"
+                 >
+                   <option value="mern">MERN Stack</option>
+                   <option value="dotnet">
+                     .NET Development
+                   </option>
+                   <option value="website">
+                     Websites
+                   </option>
+                 </select>
+               </div>
+               
+               <div>
+                 <label className="text-[10px] font-bold uppercase">
+                   Project Status
+                 </label>
+
+                 <select
+                   value={editingProject.status}
+                   onChange={(e) =>
+                     setEditingProject({
+                       ...editingProject,
+                       status: e.target.value,
+                     })
+                   }
+                   className="input-saas w-full h-11"
+                 >
+                   <option value="In Progress">In Progress</option>
+                   <option value="On Hold">On Hold</option>
+                   <option value="Completed">Completed</option>
+                   <option value="Lost">Lost</option>
+                 </select>
+               </div>
 
               <div className="flex justify-end gap-3">
                 <button
