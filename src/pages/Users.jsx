@@ -1,19 +1,30 @@
 import { useState, useEffect } from 'react';
 import AnimatedEye from '../components/AnimatedEye';
+import { allPermissions, permissionCategories } from '../context/PermissionsContext';
 
 function Users() {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [showRawData, setShowRawData] = useState(false);
+
+  /* Current logged-in user — read from localStorage */
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || '{}');
+    } catch { return {}; }
+  })();
+
+  /* Only a real Administrator can change others' profiles */
+  const isGlobalAdmin = currentUser.role === 'Administrator';
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     role: 'Member',
     developerPositions: [],
-    password: ''
+    password: '',
+    permissions: []
   });
 
   /* Load Users */
@@ -92,6 +103,7 @@ function Users() {
           ? {
               ...formData,
               developerPosition: formData.developerPositions,
+              permissions: formData.permissions,
               id: editingUser.id
             }
           : user
@@ -103,6 +115,7 @@ function Users() {
       const newUser = {
         ...formData,
         developerPosition: formData.developerPositions,
+        permissions: formData.permissions,
         id: Date.now()
       };
 
@@ -126,7 +139,8 @@ function Users() {
       email: '',
       role: 'Member',
       developerPositions: [],
-      password: ''
+      password: '',
+      permissions: []
     });
   };
 
@@ -140,12 +154,17 @@ function Users() {
       ? [user.developerPosition]
       : [];
 
+    const userPermissions = user.permissions
+      ? (Array.isArray(user.permissions) ? user.permissions : [])
+      : [];
+
     setFormData({
       name: user.name || '',
       email: user.email || '',
       role: user.role || 'Member',
       password: user.password || '',
-      developerPositions
+      developerPositions,
+      permissions: userPermissions,
     });
 
     setShowModal(true);
@@ -227,38 +246,16 @@ function Users() {
         </div>
 
         <div className='flex items-center gap-3'>
-          <button
-            onClick={openAddUserModal}
-            className='btn-secondary flex items-center gap-2'
-          >
-            ➕ Add User
-          </button>
-
-          <button
-            onClick={() => setShowRawData(!showRawData)}
-            className='text-[var(--text-secondary)] hover:text-[var(--primary-color)] flex items-center gap-2 text-[10px] font-bold'
-          >
-            {showRawData
-              ? '◀ Hide Raw Data'
-              : '▶ View Raw User Data'}
-          </button>
+          {isGlobalAdmin && (
+            <button
+              onClick={openAddUserModal}
+              className='btn-secondary flex items-center gap-2'
+            >
+              ➕ Add User
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Raw Data */}
-      {showRawData && (
-        <div className='bg-[var(--bg-color)]/50 border border-[var(--border-color)]/50 rounded-xl p-6'>
-          <h2 className='text-xl font-bold text-[var(--text-primary)] mb-4'>
-            Raw User Data
-          </h2>
-
-          <div className='overflow-x-auto'>
-            <pre className='bg-[var(--card-bg)] p-4 rounded text-[var(--text-secondary)] text-xs whitespace-pre-wrap'>
-              {JSON.stringify(users, null, 2)}
-            </pre>
-          </div>
-        </div>
-      )}
 
       {/* Teams */}
       <div className='overflow-x-auto pb-4'>
@@ -287,6 +284,8 @@ function Users() {
                       getInitials={getInitials}
                       handleEdit={handleEdit}
                       handleDelete={handleDelete}
+                      currentUserId={currentUser.id}
+                      isGlobalAdmin={isGlobalAdmin}
                     />
                   ))}
               </div>
@@ -373,41 +372,135 @@ function Users() {
                 <option value='Viewer'>Viewer</option>
               </select>
 
-              {/* Positions */}
-              <div className='space-y-2'>
-                <label className='font-semibold text-[var(--text-primary)]'>
-                  Developer Positions
-                </label>
+               {/* Developer Positions */}
+               <div className='space-y-2'>
+                 <label className='font-semibold text-[var(--text-primary)]'>
+                   Developer Positions
+                 </label>
 
-                {[
-                  'Super Admin',
-                  'Dot Net Developer',
-                  'Backend Developer',
-                  'Frontend Developer',
-                  'Android Developer',
-                  'Tester',
-                  'UI Designer'
-                ].map(position => (
-                  <label
-                    key={position}
-                    className='flex items-center gap-2 text-sm'
-                  >
-                    <input
-                      type='checkbox'
-                      name='developerPositions'
-                      value={position}
-                      checked={formData.developerPositions.includes(
-                        position
-                      )}
-                      onChange={handleInputChange}
-                    />
+                 {[
+                   'Super Admin',
+                   'Dot Net Developer',
+                   'Backend Developer',
+                   'Frontend Developer',
+                   'Android Developer',
+                   'Tester',
+                   'UI Designer'
+                 ].map(position => (
+                   <label
+                     key={position}
+                     className='flex items-center gap-2 text-sm'
+                   >
+                     <input
+                       type='checkbox'
+                       name='developerPositions'
+                       value={position}
+                       checked={formData.developerPositions.includes(
+                         position
+                       )}
+                       onChange={handleInputChange}
+                     />
 
-                    {position}
-                  </label>
-                ))}
-              </div>
+                     {position}
+                   </label>
+                 ))}
+                </div>
 
-              {/* Password */}
+                {/* Permissions Module — Admin only */}
+                {isGlobalAdmin && (
+                <div className='space-y-3 pt-4 border-t border-[var(--border-color)]'>
+                  <div className='flex items-center justify-between'>
+                    <label className='font-black text-[10px] uppercase tracking-wider text-[var(--text-secondary)]'>
+                      Permissions Module
+                    </label>
+                    <span className='text-[9px] text-[var(--text-secondary)] italic'>
+                      {formData.permissions.length} enabled
+                    </span>
+                  </div>
+
+                  <div className='space-y-3'>
+                    {permissionCategories.map(cat => {
+                      const catPerms = cat.permissions;
+                      const anyInCategory = catPerms.some(
+                        p => formData.permissions.includes(p)
+                      );
+
+                      return (
+                        <div key={cat.key} className='rounded-xl border border-[var(--border-color)] overflow-hidden'>
+                          <button
+                            type='button'
+                            onClick={() => {
+                              const next = [...formData.permissions];
+                              if (anyInCategory) {
+                                catPerms.forEach(p => {
+                                  const idx = next.indexOf(p);
+                                  if (idx > -1) next.splice(idx, 1);
+                                });
+                              } else {
+                                catPerms.forEach(p => {
+                                  if (!next.includes(p)) next.push(p);
+                                });
+                              }
+                              setFormData(prev => ({ ...prev, permissions: next }));
+                            }}
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all ${
+                              anyInCategory
+                                ? 'bg-[var(--primary-color)]/10 text-[var(--primary-color)]'
+                                : 'bg-[var(--bg-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-color)]/60'
+                            }`}
+                          >
+                            <span className='flex items-center gap-2'>
+                              <span>{cat.icon}</span>
+                              <span>{cat.label}</span>
+                            </span>
+                            <span className='text-[var(--text-secondary)]'>
+                              {anyInCategory ? '▼' : '▶'}
+                            </span>
+                          </button>
+
+                          {anyInCategory && (
+                            <div className='border-t border-[var(--border-color)] bg-[var(--bg-color)]/30 p-3 grid grid-cols-1 gap-1.5'>
+                              {catPerms.map(p => {
+                                const def = allPermissions[p];
+                                if (!def) return null;
+                                const checked = formData.permissions.includes(p);
+                                return (
+                                  <label
+                                    key={p}
+                                    className='flex items-center gap-2 text-[10px] cursor-pointer'
+                                  >
+                                    <input
+                                      type='checkbox'
+                                      checked={checked}
+                                      onChange={() => {
+                                        const next = [...formData.permissions];
+                                        if (checked) {
+                                          const idx = next.indexOf(p);
+                                          if (idx > -1) next.splice(idx, 1);
+                                        } else if (!next.includes(p)) {
+                                          next.push(p);
+                                        }
+                                        setFormData(prev => ({ ...prev, permissions: next }));
+                                      }}
+                                      className='w-3.5 h-3.5 accent-[var(--primary-color)]'
+                                    />
+                                    <span className={checked ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-secondary)]'}>
+                                      {def.label}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                </div>
+                )}
+
+               {/* Password */}
               <div className='relative'>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -452,8 +545,15 @@ function UserCard({
   color,
   getInitials,
   handleEdit,
-  handleDelete
+  handleDelete,
+  currentUserId,
+  isGlobalAdmin
 }) {
+  // Only admins see both buttons on everyone.
+  // Non-admins: can only edit their own profile; delete is hidden entirely.
+  const canEdit = isGlobalAdmin || user.id === currentUserId;
+  const canDelete = isGlobalAdmin;
+
   return (
     <div className='p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] overflow-hidden'>
       <div className='flex items-start justify-between gap-3'>
@@ -484,25 +584,41 @@ function UserCard({
                   </span>
                 )
               )}
+
+              {user.role && (
+                <span
+                  className='px-2 py-1 rounded-full text-[10px] bg-[var(--warning)]/15 text-[var(--warning)] break-words font-bold uppercase tracking-wider'
+                >
+                  {user.role}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        <div className='flex flex-col gap-2 shrink-0'>
-          <button
-            onClick={() => handleEdit(user)}
-            className='p-1 hover:bg-[var(--primary-color)]/10 rounded transition'
-          >
-            ✏️
-          </button>
+        {(canEdit || canDelete) && (
+          <div className='flex flex-col gap-2 shrink-0'>
+            {canEdit && (
+              <button
+                onClick={() => handleEdit(user)}
+                className='p-1 hover:bg-[var(--primary-color)]/10 rounded transition'
+                title={isGlobalAdmin ? `Edit ${user.name}` : 'Edit your profile'}
+              >
+                ✏️
+              </button>
+            )}
 
-          <button
-            onClick={() => handleDelete(user.id)}
-            className='p-1 hover:bg-red-500/10 rounded transition'
-          >
-            🗑️
-          </button>
-        </div>
+            {canDelete && (
+              <button
+                onClick={() => handleDelete(user.id)}
+                className='p-1 hover:bg-red-500/10 rounded transition'
+                title={`Delete ${user.name}`}
+              >
+                🗑️
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

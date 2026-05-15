@@ -1,15 +1,17 @@
 import logo from '../assets/logo.svg';
 import { useState } from 'react';
+import AnimatedEye from '../components/AnimatedEye';
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // ABSOLUTELY STATIC CREDENTIALS - UNCHANGEABLE
-  const hardcodedEmail = 'yashvaidya9623@gmail.com';
-  const hardcodedPassword = '9056';
+  // Fallback default admin credentials
+  const fallbackEmail = 'yashvaidya9623@gmail.com';
+  const fallbackPassword = '9056';
   const adminName = 'Yash Vaidya';
 
   const handleLogin = (e) => {
@@ -17,24 +19,39 @@ function Login({ onLogin }) {
     setIsLoading(true);
     setError('');
 
-    const isValid = (
-      (username === hardcodedEmail || username.toLowerCase() === adminName.toLowerCase())
-      && password === hardcodedPassword
+    // ── 1. Check all users from localStorage ──────────────────────────────────
+    const allUsers = JSON.parse(localStorage.getItem('systemUsers') || '[]');
+    const matchedUser = allUsers.find(
+      (u) =>
+        (u.email === username || u.name.toLowerCase() === username.toLowerCase()) &&
+        u.password === password
     );
 
-    if (isValid) {
+    if (matchedUser) {
+      localStorage.setItem('currentUser', JSON.stringify(matchedUser));
+      onLogin();
+      return;
+    }
+
+    // ── 2. Fallback: check hardcoded admin (if no users stored yet) ───────────
+    if (
+      (username === fallbackEmail || username.toLowerCase() === adminName.toLowerCase()) &&
+      password === fallbackPassword
+    ) {
       localStorage.setItem('currentUser', JSON.stringify({
         id: 1,
         name: adminName,
-        email: hardcodedEmail,
+        email: fallbackEmail,
         role: 'Administrator',
-        password: hardcodedPassword
+        password: fallbackPassword,
       }));
       onLogin();
-    } else {
-      setError('⚠️ Incorrect credentials. Please use: Email=yashvaidya9623@gmail.com & Password=9056 OR Name=Yash Vaidya & Password=9056');
-      setIsLoading(false);
+      return;
     }
+
+    // ── 3. Nothing matched ───────────────────────────────────────────────────
+    setError('⚠️ Incorrect username or password');
+    setIsLoading(false);
   };
 
   return (
@@ -80,14 +97,24 @@ function Login({ onLogin }) {
             <label className='block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-2 ml-1'>
               Password
             </label>
-            <input
-              type='password'
-              required
-              className='w-full h-11 px-4 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#556EE6] transition-all font-medium'
-              placeholder='Enter password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className='relative'>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                className='w-full h-11 px-4 pr-11 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#556EE6] transition-all font-medium'
+                placeholder='Enter password'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type='button'
+                onClick={() => setShowPassword(!showPassword)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#556EE6] transition-all'
+                tabIndex={-1}
+              >
+                <AnimatedEye isOpen={showPassword} />
+              </button>
+            </div>
           </div>
 
           <button
