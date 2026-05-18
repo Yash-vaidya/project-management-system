@@ -1,21 +1,14 @@
 import { NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 import logo from "../assets/logo.svg";
 
-function Navbar({ onLogout, isCollapsed, onToggle }) {
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    setIsAdmin(currentUser.role === 'Administrator');
-  }, []);
-
+/* Accept isSuperAdmin directly from App so Navbar never reads localStorage on its own. */
+function Navbar({ onLogout, isCollapsed, onToggle, isSuperAdmin }) {
   const navItems = [
     { to: '/', label: 'Dashboard', icon: '📊' },
     { to: '/projects', label: 'Library', icon: '📚' },
     { to: '/users', label: 'Users', icon: '👥' },
-    ...(isAdmin ? [{ to: '/permissions', label: 'Permissions', icon: '🔐' }] : []),
+    ...(isSuperAdmin ? [{ to: '/permissions', label: 'Permissions', icon: '🔐' }] : []),
   ];
 
   return (

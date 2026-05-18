@@ -1,6 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AnimatedEye from '../components/AnimatedEye';
-import { allPermissions, permissionCategories } from '../context/PermissionsContext';
+import { allPermissions, permissionCategories, SUPER_ROLES } from '../context/PermissionsContext';
+
+/* -------------------------------------------------------------------------- */
+/*  Unique, collision-resistant user ID generator — avoids Date.now() reuse   */
+/* -------------------------------------------------------------------------- */
+let _idCounter = 0;
+function nextUserId() {
+  // Use a monotonic counter from localStorage so a hard-reload never resets it.
+  try {
+    _idCounter = parseInt(localStorage.getItem('_userIdCounter') || '0', 10) || 0;
+  } catch { _idCounter = 0; }
+  const id = ++_idCounter;
+  try { localStorage.setItem('_userIdCounter', String(id)); } catch { /* ignore */ }
+  return id;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  currentUser — kept in sync with App via a shared localStorage key + events */
+/* -------------------------------------------------------------------------- */
+function readCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem('currentUser') || '{}');
+  } catch { return {}; }
+}
 
 function Users() {
   const [users, setUsers] = useState([]);
@@ -8,15 +31,10 @@ function Users() {
   const [showPassword, setShowPassword] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
-  /* Current logged-in user — read from localStorage */
-  const currentUser = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('currentUser') || '{}');
-    } catch { return {}; }
-  })();
-
-  /* Only a real Administrator can change others' profiles */
-  const isGlobalAdmin = currentUser.role === 'Administrator';
+  /* Read currentUser from localStorage, kept fresh by App's storage event listener */
+  const currentUser = readCurrentUser();
+  const isGlobalAdmin = SUPER_ROLES.includes(currentUser.role);
+  const loggedInUserId = currentUser.id;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -27,7 +45,7 @@ function Users() {
     permissions: []
   });
 
-  /* Load Users */
+  /* ── Sync users from localStorage (load + cross-tab updates) ────────────── */
   useEffect(() => {
     const savedUsers = localStorage.getItem('systemUsers');
 
@@ -47,22 +65,53 @@ function Users() {
         setUsers(usersWithPosition);
       } catch (error) {
         console.error('Error parsing users:', error);
-      }
-    } else {
-      const defaultUsers = [
-        {
+        /* Corrupt data — reset to default super-admin so the list is never blank */
+        const defaultUsers = [{
           id: 1,
           name: 'Yash Vaidya',
           email: 'yashvaidya9623@gmail.com',
-          role: 'Administrator',
+          role: 'Super Admin',
           password: '9056',
           developerPosition: ['Super Admin']
-        }
-      ];
+        }];
+        setUsers(defaultUsers);
+        localStorage.setItem('systemUsers', JSON.stringify(defaultUsers));
+      }
+    } else {
+      const defaultUsers = [{
+        id: 1,
+        name: 'Yash Vaidya',
+        email: 'yashvaidya9623@gmail.com',
+        role: 'Super Admin',
+        password: '9056',
+        developerPosition: ['Super Admin']
+      }];
 
       setUsers(defaultUsers);
       localStorage.setItem('systemUsers', JSON.stringify(defaultUsers));
     }
+  }, []);
+
+  /* Keep the local users list in sync if the Users page or another tab modifies storage */
+  useEffect(() => {
+    const sync = () => {
+      try {
+        const saved = localStorage.getItem('systemUsers');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setUsers(parsed.map(user => ({
+            ...user,
+            developerPosition: Array.isArray(user.developerPosition)
+              ? user.developerPosition
+              : user.developerPosition
+              ? [user.developerPosition]
+              : []
+          })));
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
   }, []);
 
   /* Input Change */
@@ -76,7 +125,7 @@ function Users() {
         if (checked) {
           return {
             ...prev,
-            [name]: [...current, value]
+            [name]: [...new Set([...current, value])]
           };
         }
 
@@ -97,14 +146,21 @@ function Users() {
   const handleSubmit = e => {
     e.preventDefault();
 
+    /* Deduplicate arrays before saving */
+    const cleanPermissions  = [...new Set(formData.permissions)];
+    const cleanPositions    = [...new Set(formData.developerPositions)];
+
     if (editingUser) {
       const updatedUsers = users.map(user =>
         user.id === editingUser.id
           ? {
-              ...formData,
-              developerPosition: formData.developerPositions,
-              permissions: formData.permissions,
-              id: editingUser.id
+              name:            formData.name,
+              email:           formData.email,
+              role:            formData.role || 'Member',        /* null/undefined → Member */
+              password:        formData.password,
+              developerPosition: cleanPositions,
+              permissions:     cleanPermissions,
+              id:              editingUser.id
             }
           : user
       );
@@ -114,9 +170,9 @@ function Users() {
     } else {
       const newUser = {
         ...formData,
-        developerPosition: formData.developerPositions,
-        permissions: formData.permissions,
-        id: Date.now()
+        developerPosition: cleanPositions,
+        permissions: cleanPermissions,
+        id: nextUserId()          /* collision-resistant ID */
       };
 
       const updatedUsers = [...users, newUser];
@@ -130,10 +186,6 @@ function Users() {
 
   /* Reset Form */
   const resetForm = () => {
-    setShowModal(false);
-    setEditingUser(null);
-    setShowPassword(false);
-
     setFormData({
       name: '',
       email: '',
@@ -142,6 +194,9 @@ function Users() {
       password: '',
       permissions: []
     });
+    setShowModal(false);
+    setEditingUser(null);
+    setShowPassword(false);
   };
 
   /* Edit */
@@ -159,10 +214,10 @@ function Users() {
       : [];
 
     setFormData({
-      name: user.name || '',
-      email: user.email || '',
-      role: user.role || 'Member',
-      password: user.password || '',
+      name:      user.name    || '',
+      email:     user.email   || '',
+      role:      user.role    || 'Member',   /* null → Member */
+      password:  user.password || '',
       developerPositions,
       permissions: userPermissions,
     });
@@ -191,10 +246,12 @@ function Users() {
     const parts = name.trim().split(' ');
 
     if (parts.length > 1) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+      const first = parts[0] ? parts[0][0] : '';
+      const second = parts[1] ? parts[1][0] : '';
+      return (first + second).toUpperCase() || 'U';
     }
 
-    return parts[0][0].toUpperCase();
+    return parts[0] ? parts[0][0].toUpperCase() : 'U';
   };
 
   /* Add User */
@@ -205,78 +262,65 @@ function Users() {
   };
 
   const developerGroups = [
-    {
-      title: 'Dot Net Developers',
-      color: 'bg-blue-500',
-      textColor: 'text-blue-400',
-      filter: 'Dot Net Developer'
-    },
-    {
-      title: 'Backend Developers',
-      color: 'bg-green-500',
-      textColor: 'text-green-400',
-      filter: 'Backend Developer'
-    },
-    {
-      title: 'Frontend Developers',
-      color: 'bg-pink-500',
-      textColor: 'text-pink-400',
-      filter: 'Frontend Developer'
-    },
-    {
-      title: 'Mobile Developers',
-      color: 'bg-orange-500',
-      textColor: 'text-orange-400',
-      filter: 'Android Developer'
-    }
+    { title: 'Super Admin',       color: 'bg-indigo-600',    textColor: 'text-indigo-400',     filter: 'Super Admin' },
+    { title: 'Dot Net Developers',  color: 'bg-blue-500',  textColor: 'text-blue-400',    filter: 'Dot Net Developer' },
+    { title: 'Backend Developers',  color: 'bg-green-500', textColor: 'text-green-400',   filter: 'Backend Developer' },
+    { title: 'Frontend Developers', color: 'bg-pink-500',  textColor: 'text-pink-400',    filter: 'Frontend Developer' },
+    { title: 'Mobile Developers',   color: 'bg-orange-500',textColor: 'text-orange-400',  filter: 'Android Developer' },
   ];
 
   return (
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-black text-[var(--text-primary)]'>
-            User Management
-          </h1>
+       <div>
+         <h1 className='text-2xl font-black text-[var(--primary-color)]'>
+           User Management
+         </h1>
 
-          <p className='text-sm text-[var(--text-secondary)] mt-1'>
-            Manage system users and teams
-          </p>
-        </div>
+         <p className='text-sm text-[var(--text-secondary)] mt-1'>
+           Manage system users and teams
+         </p>
+       </div>
 
-        <div className='flex items-center gap-3'>
-          {isGlobalAdmin && (
-            <button
-              onClick={openAddUserModal}
-              className='btn-secondary flex items-center gap-2'
-            >
-              ➕ Add User
-            </button>
-          )}
-        </div>
+         <div className='flex items-center gap-3'>
+           {isGlobalAdmin && (
+             <button
+               onClick={openAddUserModal}
+               className='btn-secondary flex items-center gap-2 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)]/20'
+             >
+               ➕ Add User
+             </button>
+           )}
+         </div>
       </div>
 
       {/* Teams */}
       <div className='overflow-x-auto pb-4'>
         <div className='flex gap-5 min-w-max'>
-          {developerGroups.map(group => (
-            <div
-              key={group.title}
-              className='card-saas p-4 w-[320px] min-w-[320px] max-h-[650px] overflow-y-auto flex flex-col'
-            >
-              <h2
-                className={`text-lg font-bold mb-4 sticky top-0 bg-[var(--card-bg)] z-10 pb-2 ${group.textColor}`}
-              >
-                {group.title}
-              </h2>
+           {developerGroups.map(group => {
+             const groupUsers = users
+               .filter(user =>
+                 user.developerPosition?.includes(group.filter)
+               )
+               /* Deduplicate inside each group — user can only appear once per card */
+               .filter((user, index, arr) =>
+                 arr.findIndex(u => u.id === user.id) === index
+               );
 
-              <div className='space-y-3'>
-                {users
-                  .filter(user =>
-                    user.developerPosition?.includes(group.filter)
-                  )
-                  .map(user => (
+             return (
+               <div
+                 key={group.title}
+                 className='card-saas p-4 w-[320px] min-w-[320px] max-h-[650px] overflow-y-auto flex flex-col bg-[var(--bg-color)]'
+               >
+                 <h2
+                   className={`text-lg font-bold mb-4 sticky top-0 z-10 pb-2 ${group.textColor}`}
+                 >
+                   {group.title}
+                 </h2>
+
+                <div className='space-y-3'>
+                  {groupUsers.map(user => (
                     <UserCard
                       key={user.id}
                       user={user}
@@ -284,19 +328,25 @@ function Users() {
                       getInitials={getInitials}
                       handleEdit={handleEdit}
                       handleDelete={handleDelete}
-                      currentUserId={currentUser.id}
+                      currentUserId={loggedInUserId}
                       isGlobalAdmin={isGlobalAdmin}
                     />
                   ))}
+                  {groupUsers.length === 0 && (
+                    <p className='text-center text-[var(--text-secondary)] text-xs opacity-50 py-6'>
+                      No members yet
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
-          {/* QA / UI Team */}
-          <div className='card-saas p-4 w-[320px] min-w-[320px] max-h-[650px] overflow-y-auto flex flex-col'>
-            <h2 className='text-lg font-bold mb-4 text-purple-400 sticky top-0 bg-[var(--card-bg)] z-10 pb-2'>
-              QA / UI Team
-            </h2>
+           {/* QA / UI Team */}
+           <div className='card-saas p-4 w-[320px] min-w-[320px] max-h-[650px] overflow-y-auto flex flex-col bg-[var(--bg-color)]'>
+             <h2 className='text-lg font-bold mb-4 text-purple-400 sticky top-0 z-10 pb-2'>
+               QA / UI Team
+             </h2>
 
             <div className='space-y-3'>
               {users
@@ -304,6 +354,10 @@ function Users() {
                   user =>
                     user.developerPosition?.includes('Tester') ||
                     user.developerPosition?.includes('UI Designer')
+                )
+                /* Deduplicate inside this section too */
+                .filter((user, index, arr) =>
+                  arr.findIndex(u => u.id === user.id) === index
                 )
                 .map(user => (
                   <UserCard
@@ -313,8 +367,19 @@ function Users() {
                     getInitials={getInitials}
                     handleEdit={handleEdit}
                     handleDelete={handleDelete}
+                    currentUserId={loggedInUserId}
+                    isGlobalAdmin={isGlobalAdmin}
                   />
                 ))}
+              {users.filter(
+                user =>
+                  user.developerPosition?.includes('Tester') ||
+                  user.developerPosition?.includes('UI Designer')
+              ).length === 0 && (
+                <p className='text-center text-[var(--text-secondary)] text-xs opacity-50 py-6'>
+                  No members yet
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -323,7 +388,7 @@ function Users() {
       {/* Modal */}
       {showModal && (
         <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-          <div className='card-saas w-[450px] p-6 max-h-[90vh] overflow-y-auto'>
+          <div className='card-saas w-[450px] p-6 max-h-[90vh] overflow-y-auto bg-[var(--bg-color)]'>
             <div className='flex justify-between items-center mb-5'>
               <h2 className='text-xl font-bold'>
                 {editingUser ? 'Edit User' : 'Add User'}
@@ -364,9 +429,7 @@ function Users() {
                 onChange={handleInputChange}
                 className='input-saas w-full'
               >
-                <option value='Administrator'>
-                  Administrator
-                </option>
+                <option value='Administrator'>Administrator</option>
                 <option value='Developer'>Developer</option>
                 <option value='Member'>Member</option>
                 <option value='Viewer'>Viewer</option>
@@ -374,7 +437,7 @@ function Users() {
 
                {/* Developer Positions */}
                <div className='space-y-2'>
-                 <label className='font-semibold text-[var(--text-primary)]'>
+                 <label className='font-semibold text-[var(--primary-color)]'>
                    Developer Positions
                  </label>
 
@@ -404,10 +467,10 @@ function Users() {
                      {position}
                    </label>
                  ))}
-                </div>
+               </div>
 
-                {/* Permissions Module — Admin only */}
-                {isGlobalAdmin && (
+              {/* Permissions Module — Admin only (hidden for non-admins) */}
+              {isGlobalAdmin && (
                 <div className='space-y-3 pt-4 border-t border-[var(--border-color)]'>
                   <div className='flex items-center justify-between'>
                     <label className='font-black text-[10px] uppercase tracking-wider text-[var(--text-secondary)]'>
@@ -498,9 +561,9 @@ function Users() {
                   </div>
 
                 </div>
-                )}
+              )}
 
-               {/* Password */}
+              {/* Password */}
               <div className='relative'>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -539,46 +602,50 @@ function Users() {
   );
 }
 
-/* User Card Component */
+/* -------------------------------------------------------------------------- */
+/*  UserCard — safe defaults on all ownership / gate props                    */
+/* -------------------------------------------------------------------------- */
 function UserCard({
   user,
   color,
   getInitials,
   handleEdit,
   handleDelete,
-  currentUserId,
-  isGlobalAdmin
+  currentUserId,       /* may be undefined before login, defaulted below */
+  isGlobalAdmin        /* defaults to false when omitted (QA section fix) */
 }) {
-  // Only admins see both buttons on everyone.
-  // Non-admins: can only edit their own profile; delete is hidden entirely.
-  const canEdit = isGlobalAdmin || user.id === currentUserId;
-  const canDelete = isGlobalAdmin;
+  const safeCurrentUserId = currentUserId ?? 0;
+  const safeIsAdmin       = !!isGlobalAdmin;
+
+  /* canEdit: admin OR (logged-in user editing their own card) */
+  const canEdit   = safeIsAdmin || user.id === safeCurrentUserId;
+  const canDelete = safeIsAdmin;   /* delete is admin-only — never granted to non-admins */
 
   return (
-    <div className='p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] overflow-hidden'>
-      <div className='flex items-start justify-between gap-3'>
-        <div className='flex items-start gap-3 flex-1 min-w-0'>
+    <div className='p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] overflow-hidden shadow-md hover:shadow-lg transition-shadow'>
+      <div className='flex items-start justify-between gap-4'>
+        <div className='flex items-start gap-4 flex-1 min-w-0'>
           <div
-            className={`w-10 h-10 min-w-[40px] rounded-full ${color} flex items-center justify-center text-white font-bold`}
+            className={`w-12 h-12 min-w-[48px] rounded-xl ${color} flex items-center justify-center text-white font-bold drop-shadow-md`}
           >
             {getInitials(user.name)}
           </div>
 
           <div className='flex-1 min-w-0 overflow-hidden'>
-            <h3 className='font-semibold text-[var(--text-primary)] truncate'>
+            <h3 className='font-semibold text-[var(--text-primary)] text-lg truncate'>
               {user.name}
             </h3>
 
-            <p className='text-xs text-[var(--text-secondary)] break-all'>
+            <p className='text-sm text-[var(--text-secondary)] break-all'>
               {user.email}
             </p>
 
-            <div className='flex flex-wrap gap-1 mt-2'>
+            <div className='flex flex-wrap gap-2 mt-3'>
               {user.developerPosition?.map(
                 (position, index) => (
                   <span
                     key={index}
-                    className='px-2 py-1 rounded-full text-[10px] bg-[var(--primary-color)]/20 text-[var(--primary-color)] break-words'
+                    className='px-3 py-1.5 rounded-full text-[10px] bg-[var(--primary-color)]/10 text-[var(--primary-color)] font-medium break-words'
                   >
                     {position}
                   </span>
@@ -587,7 +654,7 @@ function UserCard({
 
               {user.role && (
                 <span
-                  className='px-2 py-1 rounded-full text-[10px] bg-[var(--warning)]/15 text-[var(--warning)] break-words font-bold uppercase tracking-wider'
+                  className='px-3 py-1.5 rounded-full text-[10px] bg-[var(--warning)]/10 text-[var(--warning)] font-medium uppercase tracking-wider'
                 >
                   {user.role}
                 </span>
@@ -597,24 +664,28 @@ function UserCard({
         </div>
 
         {(canEdit || canDelete) && (
-          <div className='flex flex-col gap-2 shrink-0'>
+          <div className='flex flex-col gap-3 shrink-0'>
             {canEdit && (
               <button
                 onClick={() => handleEdit(user)}
-                className='p-1 hover:bg-[var(--primary-color)]/10 rounded transition'
-                title={isGlobalAdmin ? `Edit ${user.name}` : 'Edit your profile'}
+                className='p-2.5 hover:bg-[var(--primary-color)]/10 rounded-xl transition-all duration-200 border border-[var(--border-color)]/50'
+                title={safeIsAdmin ? `Edit ${user.name}` : 'Edit your profile'}
               >
-                ✏️
+                <svg className='w-5 h-5 text-[var(--text-secondary)] hover:text-[var(--primary-color)]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M11 4H9a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2zM21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                </svg>
               </button>
             )}
 
             {canDelete && (
               <button
                 onClick={() => handleDelete(user.id)}
-                className='p-1 hover:bg-red-500/10 rounded transition'
+                className='p-2.5 hover:bg-red-50/10 rounded-xl transition-all duration-200 border border-[var(--border-color)]/50'
                 title={`Delete ${user.name}`}
               >
-                🗑️
+                <svg className='w-5 h-5 text-red-500 hover:text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                </svg>
               </button>
             )}
           </div>

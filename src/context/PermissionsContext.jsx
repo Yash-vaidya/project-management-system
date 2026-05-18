@@ -52,9 +52,47 @@ export const allPermissions = {
   export_reports:          { label: 'Export Reports',           module: 'Analytics' },
 };
 
+/**
+ * Single source of truth — every permission key in the system.
+ * Re-export this in tests / guards instead of duplicating hard-coded strings
+ * in UserCard, App.jsx, or anywhere else.
+ */
+export const ALL_PERMISSION_KEYS = Object.freeze([
+  'view_all_projects', 'view_own_projects', 'create_project',
+  'edit_any_project', 'edit_own_project', 'delete_any_project', 'delete_own_project',
+  'view_task_sheet', 'edit_task_sheet', 'add_task_row', 'delete_task_row', 'change_task_status',
+  'view_sod', 'edit_sod', 'add_sod_entry', 'delete_sod_entry',
+  'view_mom', 'edit_mom', 'add_mom_entry', 'delete_mom_entry',
+  'view_documents', 'upload_document', 'delete_any_document', 'delete_own_document',
+  'view_users', 'add_user', 'edit_any_user', 'edit_own_profile', 'delete_any_user', 'reset_user_password',
+  'view_analytics', 'export_reports',
+]);
+
+/** Shorthand – same as allPermissions[ALL_PERMISSION_KEYS[k]] */
+export const ROLE_ADMIN     = 'Administrator';
+export const ROLE_SUPER_ADMIN = 'Super Admin';
+export const ROLE_DEV       = 'Developer';
+export const ROLE_MEMBER    = 'Member';
+export const ROLE_VIEWER    = 'Viewer';
+
+/** Highest-privilege roles — any of these can do everything */
+export const SUPER_ROLES = Object.freeze([ROLE_ADMIN, ROLE_SUPER_ADMIN]);
+
+/** All roles for any <select> that lists them */
+export const ALL_ROLES = Object.freeze([
+  ROLE_SUPER_ADMIN,   // top
+  ROLE_ADMIN,         // second
+  ROLE_DEV,
+  ROLE_MEMBER,
+  ROLE_VIEWER,
+]);
+
+/** All valid roles in the system (alias for ALL_ROLES) */
+export const VALID_ROLES = ALL_ROLES;
+
 /** Default permission sets for each built-in role */
 export const defaultRolePermissions = {
-  Administrator: new Set([
+  "Super Admin": new Set([
     'view_all_projects', 'view_own_projects', 'create_project',
     'edit_any_project', 'edit_own_project', 'delete_any_project', 'delete_own_project',
     'view_task_sheet', 'edit_task_sheet', 'add_task_row', 'delete_task_row', 'change_task_status',
@@ -65,7 +103,18 @@ export const defaultRolePermissions = {
     'delete_any_user', 'reset_user_password',
     'view_analytics', 'export_reports',
   ]),
-  Developer: new Set([
+  "Administrator": new Set([
+    'view_all_projects', 'view_own_projects', 'create_project',
+    'edit_any_project', 'edit_own_project', 'delete_any_project', 'delete_own_project',
+    'view_task_sheet', 'edit_task_sheet', 'add_task_row', 'delete_task_row', 'change_task_status',
+    'view_sod', 'edit_sod', 'add_sod_entry', 'delete_sod_entry',
+    'view_mom', 'edit_mom', 'add_mom_entry', 'delete_mom_entry',
+    'view_documents', 'upload_document', 'delete_any_document', 'delete_own_document',
+    'view_users', 'add_user', 'edit_any_user', 'edit_own_profile',
+    'delete_any_user', 'reset_user_password',
+    'view_analytics', 'export_reports',
+  ]),
+  "Developer": new Set([
     'view_own_projects', 'view_all_projects',
     'edit_own_project', 'create_project',
     'view_task_sheet', 'edit_task_sheet', 'add_task_row', 'delete_task_row', 'change_task_status',
@@ -75,7 +124,7 @@ export const defaultRolePermissions = {
     'view_users', 'edit_own_profile',
     'view_analytics',
   ]),
-  Member: new Set([
+  "Member": new Set([
     'view_own_projects',
     'view_task_sheet',
     'view_sod', 'add_sod_entry',
@@ -83,7 +132,7 @@ export const defaultRolePermissions = {
     'view_documents',
     'edit_own_profile',
   ]),
-  Viewer: new Set([
+  "Viewer": new Set([
     'view_own_projects',
     'view_task_sheet',
     'view_sod',

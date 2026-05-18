@@ -1,103 +1,141 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { allPermissions, defaultRolePermissions, permissionCategories } from '../context/PermissionsContext';
 
-// ─── Pure helpers (no React hook calls) ─────────────────────────────────────
+/* Valid top-level role names — blocks prototype-pollution keys like "__proto__" */
+const VALID_ROLES = Object.freeze(['Administrator', 'Developer', 'Member', 'Viewer']);
 
+/** Return the effective role for a user, falling back safely */
+function safeRole(user) {
+  if (!user) return 'Member';
+  const r = user.role;
+  return (typeof r === 'string' && VALID_ROLES.includes(r)) ? r : 'Member';
+}
+
+/** Return an array of permission keys currently active for a given user */
 function resolvePermissions(user) {
   if (!user) return [];
   if (user.permissions && Array.isArray(user.permissions)) return user.permissions;
-  if (user.role && defaultRolePermissions[user.role]) return [...defaultRolePermissions[user.role]];
+  if (defaultRolePermissions[safeRole(user)]) return [...defaultRolePermissions[safeRole(user)]];
   return [...defaultRolePermissions.Member];
 }
 
+/** Convert a raw user object into { user, can, permList, revoke, resetToRole } */
 function buildPermOps(user) {
   const list = resolvePermissions(user);
 
   return {
-    can:         (k)  => list.includes(k),
-    permList:    ()   => [...list],
+    /* read-only */
+    can:      (k)  => list.includes(k),
+    permList: ()   => [...list],
+    /* write helpers — used by savePermissions in the parent */
     revoke:      (k)  => list.filter(x => x !== k),
-    resetToRole: ()   => [...defaultRolePermissions[user?.role || 'Member']],
+    resetToRole: ()   => [...defaultRolePermissions[safeRole(user)]],
   };
 }
 
 const ALL_KEYS = Object.keys(allPermissions);
 
 function Permissions() {
-  const [users, setUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
 
-  /* Load all users — runs once on mount */
+  /* ── Load users from localStorage — runs once then stays in sync ─────────── */
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('systemUsers') || '[]');
-    setUsers(saved);
-
-    /* Keep in sync if users are edited from another tab or the Users page */
-    const sync = () => {
-      const cur = JSON.parse(localStorage.getItem('systemUsers') || '[]');
-      setUsers(cur);
+    /* Read with try/catch so corrupt JSON never crashes the page */
+    const load = () => {
+      try {
+        const saved = localStorage.getItem('systemUsers');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setAllUsers(Array.isArray(parsed) ? parsed : []);
+        } else {
+          setAllUsers([]);
+        }
+      } catch {
+        setAllUsers([]);
+      }
     };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
+
+    load();
+
+    /* Cross-tab or cross-component sync — fires on every localStorage write */
+    const onStorage = () => load();
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  /* Filtered user list */
+  /* ── Filtered list ───────────────────────────────────────────────────────── */
   const usersForQuery = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return users;
-    return users.filter(
+    if (!q) return allUsers;
+    return allUsers.filter(
       u => (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)
     );
-  }, [users, search]);
+  }, [allUsers, search]);
 
-  /* Currently selected user */
+  /* ── Selected user — always the freshest reference from the store ────────── */
   const selectedUser = useMemo(
-    () => users.find(u => u.id === selectedUserId) || null,
-    [users, selectedUserId]
+    () => allUsers.find(u => u.id === selectedUserId) || null,
+    [allUsers, selectedUserId]
   );
 
-  /* Effective permission keys for selected user */
-  const activeKeys = useMemo(
-    () => resolvePermissions(selectedUser),
+  /* ── Effective perm-set — recomputed whenever the user changes ────────────── */
+  const { can, permList } = useMemo(
+    () => buildPermOps(selectedUser),
     [selectedUser]
   );
 
-  /* ── Handlers ───────────────────────────────────────────────────────────── */
+  const activeKeys = permList();
 
+  /* ── Save permissions back to localStorage ───────────────────────────────── */
   const savePermissions = useCallback((permArray) => {
     if (!selectedUser) return;
-    const updated = users.map(u =>
-      u.id === selectedUser.id ? { ...u, permissions: permArray } : u
+
+    /* Build updated user list */
+    const updated = allUsers.map(u =>
+      u.id === selectedUser.id
+        ? { ...u, permissions: permArray }
+        : u
     );
-    setUsers(updated);
-    localStorage.setItem('systemUsers', JSON.stringify(updated));
-    showToast('Permissions saved');
-  }, [users, selectedUser]);
+
+    setAllUsers(updated);
+    try {
+      localStorage.setItem('systemUsers', JSON.stringify(updated));
+      showToast('Permissions saved');
+    } catch (err) {
+      console.error('localStorage write failed:', err);
+      showToast('Save failed — storage full or unavailable');
+    }
+  }, [allUsers, selectedUser]);
 
   const togglePerm = useCallback((key) => {
     const isOn = activeKeys.includes(key);
-    const next = isOn
-      ? activeKeys.filter(k => k !== key)
-      : [...activeKeys, key];
-    savePermissions(next);
+    savePermissions(isOn ? activeKeys.filter(k => k !== key) : [...activeKeys, key]);
   }, [activeKeys, savePermissions]);
 
   const toggleCategory = useCallback((keys) => {
     const anyOn = keys.some(k => activeKeys.includes(k));
-    const next = anyOn
-      ? activeKeys.filter(k => !keys.includes(k))
-      : [...new Set([...activeKeys, ...keys])];
-    savePermissions(next);
+    savePermissions(anyOn ? revokeCategory(keys) : grantCategory(keys));
   }, [activeKeys, savePermissions]);
+
+  function grantCategory(keys) {
+    return [...new Set([...activeKeys, ...keys])];
+  }
+
+  function revokeCategory(keys) {
+    const set = new Set(keys);
+    return activeKeys.filter(k => !set.has(k));
+  }
 
   function resetToRole() {
     if (!selectedUser) return;
-    const defaults = [...defaultRolePermissions[selectedUser.role || 'Member']];
+    const defaults = [...defaultRolePermissions[safeRole(selectedUser)]];
     savePermissions(defaults);
     showToast('Reset to role defaults');
   }
 
+  /* ── Toast — imperative DOM so no re-render dependency on state ───────────── */
   function showToast(msg) {
     const el = Object.assign(document.createElement('div'), {
       textContent: msg,
@@ -108,7 +146,7 @@ function Permissions() {
     setTimeout(() => el.remove(), 1800);
   }
 
-  /* ── Render ─────────────────────────────────────────────────────────────── */
+  /* ── Render ──────────────────────────────────────────────────────────────── */
 
   return (
     <div className='space-y-6'>
@@ -120,7 +158,7 @@ function Permissions() {
         </p>
       </div>
 
-      {/* Search bar */}
+      {/* Search */}
       <div className='card-saas p-4'>
         <input
           type='text'
@@ -145,12 +183,13 @@ function Permissions() {
             )}
             {usersForQuery.map(user => {
               const uPerms = user.permissions?.length || 0;
+              const uId     = user.id ?? 0;
               return (
                 <button
-                  key={user.id}
-                  onClick={() => setSelectedUserId(user.id)}
+                  key={uId}
+                  onClick={() => setSelectedUserId(uId)}
                   className={`w-full card-saas p-4 text-left transition-all ${
-                    selectedUserId === user.id
+                    selectedUserId === uId
                       ? 'ring-2 ring-[var(--primary-color)] bg-[var(--primary-color)]/5'
                       : 'hover:bg-[var(--bg-color)]/60'
                   }`}
@@ -187,7 +226,7 @@ function Permissions() {
             </div>
           ) : (
             <div className='card-saas p-6 space-y-5'>
-              {/* User info bar */}
+              {/* User bar */}
               <div className='flex items-center justify-between pb-4 border-b border-[var(--border-color)]'>
                 <div>
                   <h2 className='text-lg font-bold text-[var(--text-primary)]'>{selectedUser.name}</h2>
@@ -195,7 +234,7 @@ function Permissions() {
                 </div>
                 <div className='flex items-center gap-2'>
                   <span className='px-3 py-1 rounded-full text-[10px] font-black uppercase bg-[var(--primary-color)]/10 text-[var(--primary-color)]'>
-                    {selectedUser.role}
+                    {safeRole(selectedUser)}
                   </span>
                   <button
                     onClick={resetToRole}
@@ -210,13 +249,12 @@ function Permissions() {
               <div className='space-y-3'>
                 {permissionCategories.map(cat => {
                   const keys = cat.permissions;
-                  const onCount = keys.filter(k => activeKeys.includes(k)).length;
+                  const on  = keys.filter(k => activeKeys.includes(k)).length;
                   const allOn  = keys.length > 0 && keys.every(k => activeKeys.includes(k));
                   const someOn = keys.some(k => activeKeys.includes(k));
 
                   return (
                     <div key={cat.key} className='rounded-xl border border-[var(--border-color)] overflow-hidden'>
-                      {/* Category header button */}
                       <button
                         onClick={() => toggleCategory(keys)}
                         className={`w-full flex items-center justify-between px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-colors ${
@@ -233,13 +271,12 @@ function Permissions() {
                         </span>
                         <span className='flex items-center gap-3'>
                           <span className={`text-[9px] ${someOn ? 'opacity-100' : 'opacity-40'}`}>
-                            {onCount}/{keys.length}
+                            {on}/{keys.length}
                           </span>
                           <span>{someOn ? '▼' : '▶'}</span>
                         </span>
                       </button>
 
-                      {/* Individual checkboxes */}
                       <div className='border-t border-[var(--border-color)] bg-[var(--bg-color)]/30 p-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1'>
                         {keys.map(k => {
                           const def = allPermissions[k];
@@ -279,7 +316,7 @@ function Permissions() {
                 <button
                   onClick={() => {
                     savePermissions(ALL_KEYS);
-                    showToast(`All ${ALL_KEYS.length} permissions granted`);
+                    showToast(`All ${ALL_KEYS.length} granted`);
                   }}
                   className='text-[var(--primary-color)] font-black hover:underline'
                 >
