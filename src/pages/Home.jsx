@@ -6,6 +6,20 @@ import { useToast } from "../utils/ToastContext";
 function Home() {
   const [projects, setProjects] = useState([]);
   const [editingProject, setEditingProject] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    const handleStorage = () => {
+      const saved = localStorage.getItem('currentUser');
+      setCurrentUser(saved ? JSON.parse(saved) : null);
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -19,13 +33,15 @@ function Home() {
     fetchProjects();
   }, []);
 
+  const canCreateProject = () => currentUser?.role === 'Super Admin' || currentUser?.role === 'Admin';
+
   const deleteProject = async (id, name) => {
     if (window.confirm(`Are you sure you want to delete project "${name}"? This action cannot be undone.`)) {
       try {
         await fetch(`http://localhost:5000/projects/${id}`, { method: "DELETE" });
         addToast(`Project "${name}" deleted successfully`, "success");
         fetchProjects();
-      } catch (e) {
+      } catch {
         addToast("Failed to delete project", "error");
       }
     }
@@ -42,7 +58,7 @@ function Home() {
       addToast("Project updated successfully", "success");
       setEditingProject(null);
       fetchProjects();
-    } catch (e) {
+    } catch {
       addToast("Failed to update project", "error");
     }
   };
@@ -81,14 +97,18 @@ function Home() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 card-saas px-8 py-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight uppercase drop-shadow-md">Dashboard</h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium tracking-wide">Welcome: Yash Vaidya</p>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => navigate("/add-project")} className="btn-primary flex items-center gap-2 shadow-lg shadow-[#556EE6]/30">
-            <span>➕</span>
-            <span className="text-[10px] font-black uppercase tracking-widest">Add New Project</span>
-          </button>
-        </div>
+          <p className="text-xs text-[var(--text-secondary)] mt-1 font-medium tracking-wide">
+            Welcome: {currentUser?.name || 'User'}
+          </p>
+         </div>
+         {canCreateProject() && (
+           <div className="flex gap-3">
+             <button onClick={() => navigate("/add-project")} className="btn-primary flex items-center gap-2 shadow-lg shadow-[#556EE6]/30">
+               <span>➕</span>
+               <span className="text-[10px] font-black uppercase tracking-widest">Add New Project</span>
+             </button>
+           </div>
+         )}
       </div>
 
       {/* Stats Cards - 6 boxes */}

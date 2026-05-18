@@ -9,6 +9,21 @@ function ProjectDetail({ toggleSidebar, isSidebarCollapsed }) {
   const [project, setProject] = useState(null);
   const [activePage, setActivePage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Keep currentUser in sync across tabs
+  useEffect(() => {
+    const handleStorage = () => {
+      const saved = localStorage.getItem('currentUser');
+      setCurrentUser(saved ? JSON.parse(saved) : null);
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -33,6 +48,12 @@ function ProjectDetail({ toggleSidebar, isSidebarCollapsed }) {
   };
 
   const handleDeleteProject = async () => {
+    // Only Super Admin can delete
+    if (currentUser?.role !== 'Super Admin') {
+      addToast('Only Super Admin can delete projects', 'error');
+      return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this project? Data will be lost permanently.")) return;
     try {
       await fetch(`http://localhost:5000/projects/${project.id}`, { method: "DELETE" });
@@ -60,7 +81,7 @@ function ProjectDetail({ toggleSidebar, isSidebarCollapsed }) {
       activePage={activePage}
       setActivePage={setActivePage}
       goBack={() => navigate("/projects")}
-      onDelete={handleDeleteProject}
+      onDelete={currentUser?.role === 'Super Admin' ? handleDeleteProject : undefined}
       onUpdateProject={handleUpdateProject}
       toggleSidebar={toggleSidebar}
       isSidebarCollapsed={isSidebarCollapsed}

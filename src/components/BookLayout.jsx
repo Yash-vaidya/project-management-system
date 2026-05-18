@@ -96,7 +96,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
             >
               ⬅️
             </button>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{project.name}</h1>
+            <h1 className="text-3xl font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent tracking-tighter uppercase">{project.name}</h1>
             <span className="px-2 py-0.5 bg-[var(--primary-color)]/10 text-[var(--primary-color)] text-[10px] font-bold uppercase rounded tracking-widest">
               {project.type}
             </span>
@@ -106,17 +106,19 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
         
         <div className="flex gap-3 ml-10 md:ml-0">
           <button 
-            onClick={() => setIsEditingMetadata(true)}
+            onClick={onUpdateProject}
             className="p-2 px-4 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
           >
             ✏️ Edit Metadata
           </button>
-          <button 
-            onClick={onDelete}
-            className="p-2 px-4 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
-          >
-            🗑️ Delete Project
-          </button>
+          {onDelete && (
+            <button 
+              onClick={onDelete}
+              className="p-2 px-4 bg-[var(--danger)]/10 text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all"
+            >
+              🗑️ Delete Project
+            </button>
+          )}
         </div>
       </div>
 
@@ -147,7 +149,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
           ))}
           
           <div className="card-saas p-6 mt-8">
-            <h4 className="text-[10px] font-black uppercase text-[var(--text-secondary)] mb-4 tracking-tighter">Project Stats</h4>
+            <h4 className="text-[10px] font-black uppercase bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent mb-4 tracking-tighter">Project Stats</h4>
             <div className="space-y-4">
                <div>
                   <div className="flex justify-between text-[9px] font-bold mb-1">
@@ -176,21 +178,21 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="card-saas p-6 border-l-4 border-l-[var(--primary-color)]">
                     <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">Total Tasks</p>
-                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.total}</p>
+                    <p className="text-3xl font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent">{stats.total}</p>
                   </div>
                   <div className="card-saas p-6 border-l-4 border-l-[var(--success)]">
                     <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">Completed</p>
-                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.completed}</p>
+                    <p className="text-3xl font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent">{stats.completed}</p>
                   </div>
                   <div className="card-saas p-6 border-l-4 border-l-[var(--warning)]">
                     <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase mb-1">Meetings</p>
-                    <p className="text-3xl font-black text-[var(--text-primary)]">{stats.meetings}</p>
+                    <p className="text-3xl font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent">{stats.meetings}</p>
                   </div>
                </div>
 
                <div className="card-saas p-8 min-h-[400px] flex flex-col justify-center items-center text-center relative group">
                    <div className="w-20 h-20 bg-[var(--primary-color)]/10 rounded-full flex items-center justify-center text-4xl mb-6">📋</div>
-                   <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Project Overview</h3>
+                   <h3 className="text-2xl font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent mb-2 uppercase">Project Overview</h3>
                   
                   {isEditingAbout ? (
                     <div className="w-full max-w-2xl mb-8 flex flex-col gap-3">
@@ -286,7 +288,7 @@ function BookLayout({ project, activePage, setActivePage, goBack, onDelete, onUp
       <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200 text-left">
         <div className="card-saas p-0 w-full max-w-[400px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">Edit Project</h3>
+            <h3 className="text-lg font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent tracking-tight uppercase">Edit Project</h3>
             <button onClick={() => setIsEditingMetadata(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
           </div>
           

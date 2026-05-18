@@ -276,7 +276,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       {/* Table Header / Action Bar */}
       <div className="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--bg-color)]/30 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-tight">{title}</h3>
+          <h3 className="text-sm font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent uppercase tracking-tight">{title}</h3>
           <span className="px-2 py-0.5 bg-[var(--primary-color)]/10 text-[var(--primary-color)] text-[10px] font-bold rounded">
             {data.length} RECORDS
           </span>
@@ -508,14 +508,14 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className="card-saas p-0 w-full max-w-[600px] max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col">
           <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">⚙️ Table Management</h3>
+            <h3 className="text-lg font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent tracking-tight uppercase">⚙️ Table Management</h3>
             <button onClick={() => setIsManageModalOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
           </div>
           
           <div className="p-6 overflow-y-auto space-y-8 flex-1">
             {/* Column Reordering */}
             <section className="space-y-4">
-              <h4 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest border-l-4 border-[var(--primary-color)] pl-3">Column Architecture</h4>
+              <h4 className="text-[11px] font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent uppercase tracking-widest border-l-4 border-[var(--primary-color)] pl-3">Column Architecture</h4>
               <div className="space-y-2">
                 {Object.keys(data[0] || {}).map((key, i, arr) => (
                   <div key={key} className="flex items-center justify-between p-3 bg-[var(--bg-color)]/50 rounded-lg border border-[var(--border-color)] group">
@@ -549,7 +549,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
 
             {/* Status Factory */}
             <section className="space-y-4">
-              <h4 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest border-l-4 border-[var(--warning)] pl-3">Status Factory (Dropdowns)</h4>
+              <h4 className="text-[11px] font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent uppercase tracking-widest border-l-4 border-[var(--warning)] pl-3">Status Factory (Dropdowns)</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(statusConfig).map(([label, color]) => (
                   <div key={label} className="flex items-center gap-3 p-2 bg-[var(--bg-color)]/20 rounded-lg border border-[var(--border-color)] group">
@@ -594,7 +594,7 @@ function TaskSheetViewer({ taskSheet, title = "Task Sheet", onSave, toggleSideba
       <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className="card-saas p-0 w-full max-w-[500px] max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col">
           <div className="p-6 bg-[var(--bg-color)]/30 border-b border-[var(--border-color)] flex justify-between items-center">
-            <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight uppercase">✏️ Edit Row #{editingRowIndex + 1}</h3>
+            <h3 className="text-lg font-black bg-gradient-to-r from-[#FF0080] to-[#7928CA] bg-clip-text text-transparent tracking-tight uppercase">✏️ Edit Row #{editingRowIndex + 1}</h3>
             <button onClick={() => setEditingRowIndex(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">✕</button>
           </div>
           
