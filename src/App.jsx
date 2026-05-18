@@ -8,6 +8,8 @@ import Navbar from './components/Navbar';
 import TopNavbar from './components/TopNavbar';
 import ProjectDetails from './pages/ProjectDetails';
 import Users from './pages/Users';
+import Permissions from './pages/Permissions';
+import { SUPER_ROLES, VALID_ROLES } from './context/PermissionsContext';
 import { ToastProvider } from './utils/ToastContext';
 
 
@@ -15,6 +17,29 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true';
   });
+
+  /* ── Track currentUser from localStorage (kept fresh via storage events) ── */
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || '{}');
+    } catch { return {}; }
+  });
+
+  useEffect(() => {
+    const sync = () => {
+      try {
+        setCurrentUser(JSON.parse(localStorage.getItem('currentUser') || '{}'));
+      } catch { setCurrentUser({}); }
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  /* Super Admin = either role is in SUPER_ROLES */
+  const isSuperAdmin = SUPER_ROLES.includes(currentUser.role);
+
+  /* Fallback guard: block any malformed/injected role */
+  const isRoleValid = VALID_ROLES.includes(currentUser.role);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -60,9 +85,21 @@ function App() {
     }
   };
 
+  /**
+   * handleLogin — writes currentUser to localStorage BEFORE calling onLogin so the
+   * Navbar / Permissions route see the up-to-date role on the very next render.
+   */
   const handleLogin = (status) => {
     setIsLoggedIn(status);
-    localStorage.setItem('isLoggedIn', status);
+    localStorage.setItem('isLoggedIn', String(status));
+    if (status) {
+      try {
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      } catch { /* ignore storage failures */ }
+    } else {
+      localStorage.removeItem('currentUser');
+      setCurrentUser({});
+    }
   };
 
   const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -72,16 +109,27 @@ function App() {
     <div className={`min-h-screen transition-colors duration-300`} style={{ color: 'var(--text-color)' }}>
       <Router>
         <Routes>
-          <Route 
-            path='/login' 
-            element={isLoggedIn ? <Navigate to='/' /> : <Login onLogin={() => handleLogin(true)} />} 
+          <Route
+            path='/login'
+            element={
+              /* Only redirect away when we are ALREADY logged in */
+              isLoggedIn
+                ? <Navigate to='/' replace />
+                : <Login onLogin={() => handleLogin(true)} />
+            }
           />
           <Route
             path='/*'
             element={
               isLoggedIn ? (
                 <div className='flex h-screen overflow-hidden bg-transparent'>
-                  <Navbar onLogout={() => handleLogin(false)} isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
+                  {/* Pass isSuperAdmin as a prop so Navbar doesn't need its own localStorage read */}
+                  <Navbar
+                    onLogout={() => handleLogin(false)}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggle={toggleSidebar}
+                    isSuperAdmin={isSuperAdmin}
+                  />
                   <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
                     <TopNavbar theme={theme} toggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />
                     <div id='main-viewport' className='flex-1 overflow-y-auto p-6 custom-scrollbar transition-all duration-300'>
@@ -90,14 +138,24 @@ function App() {
                         <Route path='/projects' element={<Projects toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />} />
                         <Route path='/add-project' element={<AddProject />} />
                         <Route path='/project/:id' element={<ProjectDetails />} />
-                        <Route path='/users' element={<Users />} />
-                        <Route path='*' element={<Navigate to='/' />} />
+                        <Route path='/users'        element={<Users />} />
+                        {/* Only serve the Permissions page when the currentUser state says admin */}
+                        {/* Only serve the Permissions page when the currentUser state says Super Admin */}
+                        <Route
+                          path='/permissions'
+                          element={
+                            isRoleValid && isSuperAdmin
+                              ? <Permissions />
+                              : <Navigate to='/' replace />
+                          }
+                        />
+                        <Route path='*' element={<Navigate to='/' replace />} />
                       </Routes>
                     </div>
                   </div>
                 </div>
               ) : (
-                <Navigate to='/login' />
+                <Navigate to='/login' replace />
               )
             }
           />

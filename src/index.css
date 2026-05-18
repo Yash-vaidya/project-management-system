@@ -1,21 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  /* QuillPro Light Palette */
-  --primary-color: #4F6AF0;
-  --bg-color: rgba(245, 247, 250, 0.5);
-  --bg-image: url('./assets/light mode.png');
-  --card-bg: rgba(255, 255, 255, 0.90); /* White glass with high opacity for visibility */
-  --sidebar-bg: #1A1D2E;
-  --text-primary: #7C2D12; /* Darker, richer orange/brown for extreme contrast */
-  --text-secondary: #FF6600; /* Extremely bright, vivid orange */
-  --border-color: rgba(255, 255, 255, 0.9);
-  --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-  --card-shadow-hover: 0 12px 48px 0 rgba(31, 38, 135, 0.25);
-  --success: #34C38F;
-  --info: #4F6AF0;
-  --warning: #F1B44C;
-  --danger: #F46A6A;
+  /* QuillPro Light Palette - 4 Color Vibrant Template */
+  --primary-color: #4F46E5;      /* Vibrant Indigo - Main brand color */
+  --bg-color: #ffffff;           /* Clean white background */
+  --card-bg: rgba(255, 255, 255, 0.9); /* Slightly transparent white cards */
+  --sidebar-bg: #1A1D2E;         /* Keep dark sidebar for contrast */
+  --text-primary: #1F2937;       /* Dark gray for primary text (better than brown) */
+  --text-secondary: #6B7280;     /* Medium gray for secondary text */
+  --border-color: rgba(224, 231, 255, 0.5); /* Light indigo border */
+  --card-shadow: 0 8px 32px 0 rgba(79, 70, 229, 0.15);
+  --card-shadow-hover: 0 12px 48px 0 rgba(79, 70, 229, 0.25);
+  --success: #10B981;            /* Vibrant Emerald */
+  --info: #4F46E5;               /* Matches primary */
+  --warning: #F59E0B;            /* Vibrant Amber */
+  --danger: #EF4444;             /* Vibrant Red */
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, .05);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
@@ -24,8 +23,7 @@
 
 [class~="dark"] {
   /* QuillPro Dark Palette */
-  --bg-color: #151521;
-  --bg-image: url('./assets/dark mode.jpg');
+  --bg-color: #000000;
   --card-bg: rgba(30, 30, 45, 0.75);
   --sidebar-bg: #1A1D2E;
   --text-primary: #F7FAFC;
@@ -41,11 +39,6 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--text-primary);
   background-color: var(--bg-color);
-  background-image: var(--bg-image);
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;

@@ -165,15 +165,16 @@ function AddProject() {
     setIsSubmitting(true);
     setFormError("");
 
-    const newProject = {
-      name,
-      type,
-      taskSheet: previewData ? JSON.stringify(previewData) : (taskSheetText || null),
-      mom: momPreviewData ? JSON.stringify(momPreviewData) : (momText || null),
-      sod: sodPreviewData ? JSON.stringify(sodPreviewData) : (sodText || null),
-      notes,
-      createdAt: new Date().toISOString()
-    };
+     const newProject = {
+       name,
+       type,
+       status: projectStatus,
+       taskSheet: previewData ? JSON.stringify(previewData) : (taskSheetText || null),
+       mom: momPreviewData ? JSON.stringify(momPreviewData) : (momText || null),
+       sod: sodPreviewData ? JSON.stringify(sodPreviewData) : (sodText || null),
+       notes,
+       createdAt: new Date().toISOString()
+     };
 
     try {
       const res = await fetch("http://localhost:5000/projects", {
@@ -205,31 +206,44 @@ function AddProject() {
         <div className="card-saas p-10 space-y-10">
           <div className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--primary-color)] pb-2 border-b border-[var(--border-color)]">Basic Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. My Project"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="input-saas w-full h-11"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Type</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="input-saas w-full h-11 appearance-none cursor-pointer"
-                >
-                  <option value="mern">MERN Stack</option>
-                  <option value="dotnet">.NET Development</option>
-                  <option value="website">Static/Dynamic Websites</option>
-                </select>
-              </div>
-            </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Name</label>
+                 <input
+                   type="text"
+                   placeholder="e.g. My Project"
+                   value={name}
+                   onChange={(e) => setName(e.target.value)}
+                   className="input-saas w-full h-11"
+                   required
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Type</label>
+                 <select
+                   value={type}
+                   onChange={(e) => setType(e.target.value)}
+                   className="input-saas w-full h-11 appearance-none cursor-pointer"
+                 >
+                   <option value="mern">MERN Stack</option>
+                   <option value="dotnet">.NET Development</option>
+                   <option value="website">Static/Dynamic Websites</option>
+                 </select>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Project Status</label>
+                 <select
+                   value={projectStatus}
+                   onChange={(e) => setProjectStatus(e.target.value)}
+                   className="input-saas w-full h-11 appearance-none cursor-pointer"
+                 >
+                   <option value="In Progress">In Progress</option>
+                   <option value="On Hold">On Hold</option>
+                   <option value="Completed">Completed</option>
+                   <option value="Lost">Lost</option>
+                 </select>
+               </div>
+             </div>
           </div>
 
           {/* PDF Upload */}

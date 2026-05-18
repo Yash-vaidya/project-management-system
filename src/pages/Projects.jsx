@@ -84,9 +84,11 @@ function Projects() {
 
   const handleDrop = async (e, catId) => {
     e.preventDefault();
+
     setDraggedOverShelf(null);
 
     const projectId = e.dataTransfer.getData("projectId");
+
     if (!projectId) return;
 
     const project = projects.find((p) => p.id.toString() === projectId.toString());
@@ -109,6 +111,7 @@ function Projects() {
       addToast(`Project moved to ${catId}`, "success");
     } catch (err) {
       console.error(err);
+
       addToast("Failed to move project", "error");
     }
   };
@@ -397,6 +400,113 @@ function Projects() {
           </div>
         )}
       </div>
+
+      {editingProject && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+          <div className="card-saas w-full max-w-[400px] overflow-hidden">
+            <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center">
+              <h3 className="text-lg font-bold">
+                Edit Project
+              </h3>
+
+              <button
+                onClick={() => setEditingProject(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+             <form
+               onSubmit={updateProject}
+               className="p-6 space-y-5"
+             >
+               <div>
+                 <label className="text-[10px] font-bold uppercase">
+                   Project Name
+                 </label>
+
+                 <input
+                   type="text"
+                   value={editingProject.name}
+                   onChange={(e) =>
+                     setEditingProject({
+                       ...editingProject,
+                       name: e.target.value,
+                     })
+                   }
+                   className="input-saas w-full h-11"
+                   required
+                 />
+               </div>
+
+               <div>
+                 <label className="text-[10px] font-bold uppercase">
+                   Project Type
+                 </label>
+
+                 <select
+                   value={editingProject.type}
+                   onChange={(e) =>
+                     setEditingProject({
+                       ...editingProject,
+                       type: e.target.value,
+                     })
+                   }
+                   className="input-saas w-full h-11"
+                 >
+                   <option value="mern">MERN Stack</option>
+                   <option value="dotnet">
+                     .NET Development
+                   </option>
+                   <option value="website">
+                     Websites
+                   </option>
+                 </select>
+               </div>
+               
+               <div>
+                 <label className="text-[10px] font-bold uppercase">
+                   Project Status
+                 </label>
+
+                 <select
+                   value={editingProject.status}
+                   onChange={(e) =>
+                     setEditingProject({
+                       ...editingProject,
+                       status: e.target.value,
+                     })
+                   }
+                   className="input-saas w-full h-11"
+                 >
+                   <option value="In Progress">In Progress</option>
+                   <option value="On Hold">On Hold</option>
+                   <option value="Completed">Completed</option>
+                   <option value="Lost">Lost</option>
+                 </select>
+               </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditingProject(null)
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
